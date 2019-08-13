@@ -31,8 +31,8 @@ import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import com.zerodhatech.models.Margin;
 import com.zerodhatech.models.User;
 
-import kiteconnect.MOdel.InstruDetail;
-import kiteconnect.MOdel.Stock;
+import kiteconnect.Model.InstruDetail;
+import kiteconnect.Model.Stock;
 import kiteconnect.Model.Examples;
 import kiteconnect.Model.Login_module;
 import sessionFactory.C3poDataSource;
@@ -178,7 +178,7 @@ public class FunctionController {
         try
         {
         ArrayList<Long> tokens = new ArrayList<Long>();
-        FileReader filereader = new FileReader(new File("/Users/varun/Desktop/only_cash.csv"));
+        FileReader filereader = new FileReader(new File("/Users/varun/Desktop/mcx.csv"));
         CSVReader csvReader = new CSVReader(filereader); 
 	    String[] nextRecord; 
 	    while ((nextRecord = csvReader.readNext()) != null) 
@@ -218,13 +218,15 @@ public class FunctionController {
 		    	Stock.name_list.put(rs_2.getLong("instrument_token"),rs_2.getString("tradingsymbol"));
 		    }
 		    
-		 req.setAttribute("Stock_Name_List", Stock.name_list);   
+		    
 		    
 	    
 		    con.close();
 		    Examples examples = new Examples();
 		    examples.tickerUsage(TestController.kiteConnect, tokens);    
-
+     
+		    req.setAttribute("Stock_List", Stock.stock_list);
+		    
 		return new ModelAndView("stratergy1");
         }
         

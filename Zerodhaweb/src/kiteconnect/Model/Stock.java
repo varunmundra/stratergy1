@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
+import kiteconnect.Model.StockDatatoSend;
+
 public class Stock {
 	
 	public Stock()
@@ -27,7 +29,7 @@ public class Stock {
 	public LimitedSizeQueue<Date> high_queue =new LimitedSizeQueue<Date>(9);
 	public LimitedSizeQueue<Date> low_queue =new LimitedSizeQueue<Date>(9);
 	
-	
+	StockDatatoSend dummy_obj=null;
 	
 	
 	public LimitedSizeQueue<Date> getHigh_queue() {
@@ -88,7 +90,11 @@ public class Stock {
 		this.low_counter = low_counter;
 	}
 	
-	
+	public StockDatatoSend getNewDummyObj()
+	{
+		dummy_obj = new StockDatatoSend(this.instrument_token,this.LTP,this.high,this.low,this.high_counter,this.low_counter);
+		return dummy_obj;
+	}
 	
 	
 	

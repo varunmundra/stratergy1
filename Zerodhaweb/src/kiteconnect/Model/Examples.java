@@ -6,7 +6,8 @@ import com.zerodhatech.kiteconnect.utils.Constants;
 import com.zerodhatech.models.*;
 import com.zerodhatech.ticker.*;
 
-import kiteconnect.MOdel.Stock;
+import kiteconnect.Model.Stock;
+import rupeevest.TickData.WebScket.TickerEndpoint;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -540,14 +541,11 @@ public class Examples {
                 			
                 			
                 			 
-                		}
-                		
-                		
+                		}                		                		
                 		
                 		Stock.stock_list.put(instrument_token_tmp,ob);
-                		
+                		TickerEndpoint.sendData(ob.getNewDummyObj());
                 	
-                		
                 		
 //                		System.out.println(ob.getLow());
                 		
