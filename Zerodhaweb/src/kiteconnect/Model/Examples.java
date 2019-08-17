@@ -8,11 +8,16 @@ import com.zerodhatech.ticker.*;
 
 import kiteconnect.Model.Stock;
 import rupeevest.TickData.WebScket.TickerEndpoint;
+import sessionFactory.C3poDataSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -700,4 +705,377 @@ public class Examples {
         }
 		
 	}
+	
+	public void getHistoricalData30min(KiteConnect kiteConnect, final ArrayList<Long> tokens) throws KiteException, IOException, SQLException {
+
+        
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        Date from =  new Date();
+
+        Date to = new Date();
+
+        try {
+
+            from = formatter.parse("2019-06-01 09:15:00");
+
+            to = formatter.parse("2019-08-16 15:30:00");
+
+        }catch (ParseException e) {
+
+            e.printStackTrace();
+
+        }
+
+        Connection con = C3poDataSource.getConnection();
+
+
+
+    	Iterator<Long> it = tokens.iterator(); 
+
+        while (it.hasNext()) {
+
+//        	System.out.println(it.next().toString()); 
+
+        	String a1 = it.next().toString();
+
+        	 HistoricalData historicalData = kiteConnect.getHistoricalData(from, to, a1, "30minute", false);
+
+             
+
+             for(HistoricalData bb :historicalData.dataArrayList)
+
+             {
+
+            	 String sql = "INSERT INTO historical_30min (instrument_token,timeStamp,open,high,low,close,volume)\n" + 
+
+              			"VALUES (?,?,?,?,?,?,?);";
+
+
+
+              	PreparedStatement preparedStatement = con.prepareStatement(sql);
+
+
+
+              	preparedStatement.setLong(1, Long.parseLong(a1));
+
+              	SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+
+              	Date ts = new Date();
+
+              	try {
+
+              		
+
+     				ts = sdf3.parse(bb.timeStamp);
+
+     				
+
+     			} catch (ParseException e) {
+
+     				// TODO Auto-generated catch block
+
+     				e.printStackTrace();
+
+     			}
+
+              	java.sql.Timestamp ts1 = new java.sql.Timestamp(ts.getTime());
+
+              	
+
+              	preparedStatement.setTimestamp(2, ts1);
+
+              	preparedStatement.setDouble(3, bb.open);
+
+              	preparedStatement.setDouble(4, bb.high);
+
+              	preparedStatement.setDouble(5, bb.low);
+
+              	preparedStatement.setDouble(6, bb.close);
+
+              	preparedStatement.setLong(7, bb.volume);
+
+              	preparedStatement.executeUpdate();
+
+             }
+
+        }
+        System.out.println("finishes 30 min");
+       con.close();
+       
+
+    }
+	
+	
+	public void getHistoricalDataday(KiteConnect kiteConnect, final ArrayList<Long> tokens) throws KiteException, IOException, SQLException {
+
+        /** Get historical data dump, requires from and to date, intrument token, interval, continuous (for expired F&O contracts)
+
+         * returns historical data object which will have list of historical data inside the object.*/
+
+    	
+
+            
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        Date from =  new Date();
+
+        Date to = new Date();
+
+        try {
+
+            from = formatter.parse("2019-06-01 00:00:00");
+
+            to = formatter.parse("2019-08-16 19:30:00");
+
+        }catch (ParseException e) {
+
+            e.printStackTrace();
+
+        }
+
+        Connection con = C3poDataSource.getConnection();
+
+
+
+    	Iterator<Long> it = tokens.iterator(); 
+
+        while (it.hasNext()) {
+
+//        	System.out.println(it.next().toString()); 
+
+        	String a1 = it.next().toString();
+
+        	 HistoricalData historicalData = kiteConnect.getHistoricalData(from, to, a1, "day", false);
+
+             
+
+             for(HistoricalData bb :historicalData.dataArrayList)
+
+             {
+
+            	 String sql = "INSERT INTO historical_day (instrument_token,timeStamp,open,high,low,close,volume)\n" + 
+
+              			"VALUES (?,?,?,?,?,?,?);";
+
+
+
+              	PreparedStatement preparedStatement = con.prepareStatement(sql);
+
+
+
+              	preparedStatement.setLong(1, Long.parseLong(a1));
+
+              	SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+
+              	Date ts = new Date();
+
+              	try {
+
+              		
+
+     				ts = sdf3.parse(bb.timeStamp);
+
+     				
+
+     			} catch (ParseException e) {
+
+     				// TODO Auto-generated catch block
+
+     				e.printStackTrace();
+
+     			}
+
+              	java.sql.Timestamp ts1 = new java.sql.Timestamp(ts.getTime());
+
+              	
+
+              	preparedStatement.setTimestamp(2, ts1);
+
+              	preparedStatement.setDouble(3, bb.open);
+
+              	preparedStatement.setDouble(4, bb.high);
+
+              	preparedStatement.setDouble(5, bb.low);
+
+              	preparedStatement.setDouble(6, bb.close);
+
+              	preparedStatement.setLong(7, bb.volume);
+
+              	preparedStatement.executeUpdate();
+
+             }
+
+        }
+
+       con.close();
+
+    }
+
+    
+
+    public void saveHLC()  {
+
+        /** Save avg volume and h l c  */
+
+    	try {
+
+			Connection con = C3poDataSource.getConnection();
+
+			String sql = "select distinct(instrument_token) from historical_day;";
+
+			PreparedStatement stmt = con.prepareStatement(sql);
+
+			ResultSet rs = stmt.executeQuery();
+
+			 while(rs.next())
+
+			    {
+
+//			    	System.out.println(rs.getLong("instrument_token"));
+
+			    	String sql2 = "select max(timeStamp) as max_date from historical_day where instrument_token=?";
+
+			    	PreparedStatement stmt2 = con.prepareStatement(sql2);
+
+			    	stmt2.setLong(1,rs.getLong("instrument_token"));
+
+			    	ResultSet rs2 = stmt2.executeQuery();
+
+			    	while(rs2.next()) {
+
+//			    		System.out.println(rs2.getTimestamp("max_date"));
+
+			    		String sql3 = "select high,low,close from historical_day where instrument_token=? and timeStamp = ?";
+
+				    	PreparedStatement stmt3 = con.prepareStatement(sql3);
+
+				    	stmt3.setLong(1,rs.getLong("instrument_token"));
+
+				    	stmt3.setTimestamp(2,rs2.getTimestamp("max_date"));
+
+				    	ResultSet rs3 = stmt3.executeQuery();
+
+				    	while(rs3.next()) {
+
+//				    		System.out.println(rs3.getDouble("high"));
+
+//				    		System.out.println(rs3.getDouble("low"));
+
+//				    		System.out.println(rs3.getDouble("close"));
+
+				    		String sql4 = "INSERT INTO save_avg (instrument_token,high,low,close)\n" + 
+
+			              			"VALUES (?,?,?,?);";
+
+					    	PreparedStatement stmt4 = con.prepareStatement(sql4);
+
+					    	stmt4.setLong(1,rs.getLong("instrument_token"));
+
+					    	stmt4.setDouble(2, rs3.getDouble("high"));
+
+					    	stmt4.setDouble(3, rs3.getDouble("low"));
+
+					    	stmt4.setDouble(4, rs3.getDouble("close"));
+
+					    	stmt4.executeUpdate();
+
+				    		
+
+				    		
+
+				    		
+
+				    	}
+
+				    	
+
+			    		
+
+			    	}
+
+			    	
+
+			    }
+
+			 con.close();
+
+			
+
+		} catch (SQLException e) {
+
+			// TODO Auto-generated catch block
+
+			e.printStackTrace();
+
+		}
+
+    	
+
+    	
+
+        
+
+        System.out.println("finish");
+
+    }
+
+    
+
+    public void saveAvgVolume()  {
+
+        /** Save avg volume and h l c  */
+
+    	try {
+
+			Connection con = C3poDataSource.getConnection();
+
+			String sql = "select avg(volume) as avg_vol,instrument_token  from historical_30min where hour(timeStamp) = 9 and minute(timeStamp) = 15 group by instrument_token;";
+
+			PreparedStatement stmt = con.prepareStatement(sql);
+
+			ResultSet rs = stmt.executeQuery();
+
+			 while(rs.next())
+
+			    {
+
+			    	String sql4 = "UPDATE save_avg SET volume = ? WHERE instrument_token = ?;";
+
+			    	PreparedStatement stmt4 = con.prepareStatement(sql4);
+
+			    	stmt4.setDouble(1,rs.getDouble("avg_vol"));
+
+			    	stmt4.setLong(2,rs.getLong("instrument_token"));
+
+			    	stmt4.executeUpdate();
+
+			    	
+
+			    }
+
+			 con.close();
+
+		} catch (SQLException e) {
+
+			// TODO Auto-generated catch block
+
+			e.printStackTrace();
+
+		}
+
+    	
+
+    	
+
+        
+
+        System.out.println("finish");
+
+    }
+	
+	
+	
+	
 }

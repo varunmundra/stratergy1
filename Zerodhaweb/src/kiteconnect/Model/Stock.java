@@ -52,7 +52,43 @@ public class Stock {
 	double low;
 	int high_counter;
 	int low_counter;
+	double prev_high;
+	double prev_low;
+	double prev_close;
+	double avg_volume;
 	
+	public StockDatatoSend getDummy_obj() {
+		return dummy_obj;
+	}
+	public void setDummy_obj(StockDatatoSend dummy_obj) {
+		this.dummy_obj = dummy_obj;
+	}
+	public double getPrev_high() {
+		return prev_high;
+	}
+	public void setPrev_high(double prev_high) {
+		this.prev_high = prev_high;
+	}
+	public double getPrev_low() {
+		return prev_low;
+	}
+	public void setPrev_low(double prev_low) {
+		this.prev_low = prev_low;
+	}
+	public double getPrev_close() {
+		return prev_close;
+	}
+	public void setPrev_close(double prev_close) {
+		this.prev_close = prev_close;
+	}
+
+
+	public double getAvg_volume() {
+		return avg_volume;
+	}
+	public void setAvg_volume(double avg_volume) {
+		this.avg_volume = avg_volume;
+	}
 	public long getInstrument_token() {
 		return instrument_token;
 	}
@@ -92,7 +128,7 @@ public class Stock {
 	
 	public StockDatatoSend getNewDummyObj()
 	{
-		dummy_obj = new StockDatatoSend(this.instrument_token,this.LTP,this.high,this.low,this.high_counter,this.low_counter);
+		dummy_obj = new StockDatatoSend(this.instrument_token,this.LTP,this.high,this.low,this.high_counter,this.low_counter,this.prev_high,this.prev_low,this.prev_close,this.avg_volume);
 		return dummy_obj;
 	}
 	

@@ -39,6 +39,11 @@ webSocket.onmessage = function(msg) {
    $("#"+stock.instrument_token+"_low").text(stock.low);
    $("#"+stock.instrument_token+"_high_counter").text(stock.high_counter);
    $("#"+stock.instrument_token+"_low_counter").text(stock.low_counter);
+   
+   $("#"+stock.instrument_token+"_prev_low").text(stock.prev_low);
+   $("#"+stock.instrument_token+"_prev_high").text(stock.prev_high);
+   $("#"+stock.instrument_token+"_prev_close").text(stock.prev_close);
+   $("#"+stock.instrument_token+"_avg_volume").text(stock.avg_volume);
   
   
   /*  console.log("#"+stock.instrument_token);*/
@@ -59,6 +64,11 @@ webSocket.onmessage = function(msg) {
 
 
 </script>
+<style>
+table, th, td {
+  border: 1px solid black;
+}
+</style>
 
 </head>
 <body>
@@ -66,7 +76,7 @@ webSocket.onmessage = function(msg) {
 <%-- <h4><c:out value="${margin.cash}" /></h4>  --%>
 
 <table>
-<tr><td>Token No</td><td>LTP</td><td>High</td><td>Low</td><td>High Counter</td> <td>Low Counter</td></tr>
+<tr><td>Token No</td><td>Token Name</td><td>LTP</td><td>High</td><td>Low</td><td>High Counter</td> <td>Low Counter</td> <td>PrevDay Low</td> <td>PrevDay High</td> <td>PrevDay Close</td> <td>Average Volume</td></tr>
 
 <% HashMap<Long, Stock> stock_list = (HashMap<Long, Stock>) request.getAttribute("Stock_List");%>
  
@@ -74,11 +84,16 @@ webSocket.onmessage = function(msg) {
    <tr id="<%=entry.getKey()%>">
    <% Stock ob = entry.getValue(); %>
    <td><%=ob.getInstrument_token() %></td>
+    <td> <%=Stock.name_list.get(ob.getInstrument_token())%> </td>
    <td id="<%=entry.getKey()%>_ltp"><%=ob.getLTP() %></td>
    <td id="<%=entry.getKey()%>_high"><%= ob.getHigh()%></td>
    <td id="<%=entry.getKey()%>_low"><%= ob.getLow()%></td>
    <td id="<%=entry.getKey()%>_high_counter"><%= ob.getHigh_counter()%></td>
    <td id="<%=entry.getKey()%>_low_counter"><%= ob.getLow_counter()%></td>
+   <td id="<%=entry.getKey()%>_prev_low"><%= ob.getPrev_low()%></td>
+   <td id="<%=entry.getKey()%>_prev_high"><%= ob.getPrev_high()%></td>
+   <td id="<%=entry.getKey()%>_prev_close"><%= ob.getPrev_close()%></td>
+   <td id="<%=entry.getKey()%>_avg_volume"><%= ob.getAvg_volume()%></td>
    </tr>
 <%} %>
 

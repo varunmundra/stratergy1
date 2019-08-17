@@ -178,9 +178,11 @@ public class FunctionController {
         try
         {
         ArrayList<Long> tokens = new ArrayList<Long>();
-        FileReader filereader = new FileReader(new File("/Users/varun/Desktop/mcx.csv"));
+        FileReader filereader = new FileReader(new File("/Users/varun/Desktop/only_cash.csv"));
         CSVReader csvReader = new CSVReader(filereader); 
 	    String[] nextRecord; 
+	    
+	    
 	    while ((nextRecord = csvReader.readNext()) != null) 
 	    {
 	    	tokens.add(Long.parseLong(nextRecord[0]));
@@ -190,11 +192,53 @@ public class FunctionController {
 	    	 query_bldr.append(",");
 	    	
 	    }
+	    
+	    StringBuilder builder = new StringBuilder();
+	    
+	    
+	    for (Long key : Stock.stock_list.keySet()) {
+//	    for( int i = 0 ; i < Stock.stock_list.size(); i++ ) 
+	    
+	        builder.append(Stock.stock_list.get(key).getInstrument_token()+",");
+	    }
+	    
+	    String stmt_setter = "select * from save_avg where instrument_token in (" 
+	               + builder.deleteCharAt( builder.length() -1 ).toString() + ")";
+
+	    con = C3poDataSource.getConnection();
+	    
+	    PreparedStatement stmt_data_setter = con.prepareStatement(stmt_setter);
+	    
+	    ResultSet rs_3 = stmt_data_setter.executeQuery();
+	    Stock temp_obj;
+	    while(rs_3.next())
+	    {
+	    	temp_obj =  Stock.stock_list.get(rs_3.getLong("instrument_token"));
+	    	
+	    	if(rs_3.getString("close")!=null) 
+	    	temp_obj.setPrev_close(rs_3.getDouble("close"));
+	    	
+	    	if(rs_3.getString("high")!=null) 
+	    	temp_obj.setPrev_high(rs_3.getDouble("high"));
+	    	
+	    	if(rs_3.getString("low")!=null)
+	    	temp_obj.setPrev_low(rs_3.getDouble("low"));
+	    	
+	    	if(rs_3.getString("volume")!=null)
+	    	temp_obj.setAvg_volume(rs_3.getDouble("volume"));
+	    	
+	    	
+	    	Stock.stock_list.put(rs_3.getLong("instrument_token"), temp_obj);
+	    		    	
+	    }
+	    
+	    
+	    
 	    int index=query_bldr.lastIndexOf(",");    
 	    query_bldr.replace(index,1+index,"");    
 	    
 	    query_bldr.append(")");
-	    con = C3poDataSource.getConnection();
+//	    con = C3poDataSource.getConnection();
 		
 	    
 //	   Object[] ob = tokens.toArray();
@@ -223,6 +267,15 @@ public class FunctionController {
 	    
 		    con.close();
 		    Examples examples = new Examples();
+//		    examples.saveHLC();
+
+//		    examples.saveAvgVolume();
+
+//		    examples.getHistoricalData(TestController.kiteConnect);
+
+//		    examples.getHistoricalData30min(TestController.kiteConnect,tokens);
+
+//		    examples.getHistoricalDataday(TestController.kiteConnect,tokens);
 		    examples.tickerUsage(TestController.kiteConnect, tokens);    
      
 		    req.setAttribute("Stock_List", Stock.stock_list);
