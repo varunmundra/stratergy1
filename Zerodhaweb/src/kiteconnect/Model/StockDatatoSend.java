@@ -1,5 +1,7 @@
 package kiteconnect.Model;
 
+import java.util.Date;
+
 public class StockDatatoSend {
 	public StockDatatoSend()
 	{
@@ -16,7 +18,7 @@ public class StockDatatoSend {
 	
 	
 	public StockDatatoSend(long instrument_token, double lTP, double high, double low, int high_counter,
-			int low_counter,double prev_high,double prev_low,double prev_close,double avg_volume) {
+			int low_counter,double prev_high,double prev_low,double prev_close,double avg_volume ,char flag, double current_volume , Date time_stamp) {
 		super();
 		this.instrument_token = instrument_token;
 		LTP = lTP;
@@ -28,7 +30,10 @@ public class StockDatatoSend {
 		this.prev_low = prev_low;
 		this.prev_close = prev_close;
 		this.avg_volume = avg_volume;
-		
+		this.flag = flag;
+		this.stock_name = Stock.name_list.get(instrument_token);
+		this.current_volume = current_volume;
+		this.time_stamp = time_stamp;
 	}
 
 
@@ -43,7 +48,10 @@ public class StockDatatoSend {
 	double prev_low;
 	double prev_close;
 	double avg_volume;
-	
+	char flag;  // L- means low , H - means high
+	String stock_name;
+	Date time_stamp;
+	double current_volume;
 	
 	public double getPrev_high() {
 		return prev_high;
@@ -104,6 +112,31 @@ public class StockDatatoSend {
 	}
 	public void setLow_counter(int low_counter) {
 		this.low_counter = low_counter;
+	}
+	public char getFlag() {
+		return flag;
+	}
+	public void setFlag(char flag) {
+		this.flag = flag;
+	}
+	public String getStock_name() {
+		return stock_name;
+	}
+	public void setStock_name(String stock_name) {
+		this.stock_name = stock_name;
+	}
+
+	public Date getTime_stamp() {
+		return time_stamp;
+	}
+	public void setTime_stamp(Date time_stamp) {
+		this.time_stamp = time_stamp;
+	}
+	public double getCurrent_volume() {
+		return current_volume;
+	}
+	public void setCurrent_volume(double current_volume) {
+		this.current_volume = current_volume;
 	}
 	
 	

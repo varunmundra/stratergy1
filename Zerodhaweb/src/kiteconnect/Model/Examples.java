@@ -484,13 +484,16 @@ public class Examples {
                 		Stock ob = Stock.stock_list.get(instrument_token_tmp);
                 		
                 		ob.setLTP(ticks.get(i).getLastTradedPrice());
+                		ob.setTime_stamp(ticks.get(i).getTickTimestamp()); 
+            			ob.setCurrent_volume(ticks.get(i).getVolumeTradedToday());
                 		
                 		if ( Double.compare(ticks.get(i).getLastTradedPrice(),ob.getHigh()) > 0 )
 //                		if( ticks.get(i).getLastTradedPrice() > ob.getHigh())
                 		{
                 			ob.setHigh(ticks.get(i).getLastTradedPrice());
                 			ob.setHigh_counter(ob.getHigh_counter()+1);
-//                			
+                			ob.setFlag('H'); // H means high 	
+                			
                 			if((ticks.get(i).getTickTimestamp()==null))
                 			{
                 				ob.getHigh_queue().add(new Date());
@@ -502,16 +505,21 @@ public class Examples {
                 			
                 			if(ob.getHigh_counter() >= 25)
                 			{
-                				if(ob.getHigh_counter() ==33)
-                				{
-                					System.out.println("##################");
-                				}	
+//                				if(ob.getHigh_counter() ==33)
+//                				{
+//                					System.out.println("##################");
+//                				}	
+                			   
                 			 System.out.println(Stock.name_list.get(ob.getInstrument_token())+" ,******* High_now->  "+ob.getHigh_counter()+"   ******** , Low->"+ob.getLow_counter()+" , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday()+" Diff of last 10 highs->"+ob.getHigh_queue().getDifference()+" Sec");
-                			 if(ob.getHigh_counter() ==33)
-             				{
-             					System.out.println("##################");
-             				}
+//                			 if(ob.getHigh_counter() ==33)
+//             				{
+//             					System.out.println("##################");
+//             				}
                 			}
+                			if(ob.getHigh_counter() >=25)
+                					{
+                				        TickerEndpoint.sendData(ob.getNewDummyObj());	
+                					}
                 			
                 		}
                 		
@@ -520,6 +528,7 @@ public class Examples {
                 		{
                 			ob.setLow(ticks.get(i).getLastTradedPrice());
                 			ob.setLow_counter(ob.getLow_counter()+1);
+                			ob.setFlag('L'); // L means low 
                 			
                 			if(ticks.get(i).getTickTimestamp()==null)
                 			{
@@ -532,25 +541,32 @@ public class Examples {
                 			 
                 			if(ob.getLow_counter() >=25)
                 			{
-                				if(ob.getLow_counter() ==33)
-                				{
-                					System.out.println("##################");
-                				}
+//                				if(ob.getLow_counter() ==33)
+//                				{
+//                					System.out.println("##################");
+//                				}
+                				
                 				System.out.println(Stock.name_list.get(ob.getInstrument_token())+" , High->"+ob.getHigh_counter()+" ,******** Low_now->  "+ob.getLow_counter()+"   ********* , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday()+" Diff of last 10 lows->"+ob.getLow_queue().getDifference()+" Sec");
-                				if(ob.getLow_counter() ==33)
-                				{
-                					System.out.println("##################");
-                				}
+//                				if(ob.getLow_counter() ==33)
+//                				{
+//                					System.out.println("##################");
+//                				}
                 			}
                 			
-                			
+                			if(ob.getLow_counter() >=25)
+                					{
+                				        TickerEndpoint.sendData(ob.getNewDummyObj());	
+                					}
                 			
                 			 
                 		}                		                		
                 		
                 		Stock.stock_list.put(instrument_token_tmp,ob);
-                		TickerEndpoint.sendData(ob.getNewDummyObj());
-                	
+                		
+//                		if((ob.getLow_counter() >=10) || (ob.getHigh_counter() >= 10))
+//                		{
+//                		     TickerEndpoint.sendData(ob.getNewDummyObj());
+//                		}
                 		
 //                		System.out.println(ob.getLow());
                 		
@@ -706,7 +722,7 @@ public class Examples {
 		
 	}
 	
-	public void getHistoricalData30min(KiteConnect kiteConnect, final ArrayList<Long> tokens) throws KiteException, IOException, SQLException {
+	public void getHistoricalData30min(KiteConnect kiteConnect) throws KiteException, IOException, SQLException, JSONException, ParseException {
 
         
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -715,38 +731,55 @@ public class Examples {
 
         Date to = new Date();
 
-        try {
-
-            from = formatter.parse("2019-06-01 09:15:00");
-
-            to = formatter.parse("2019-08-16 15:30:00");
-
-        }catch (ParseException e) {
-
-            e.printStackTrace();
-
-        }
+//        try {
+//
+//            from = formatter.parse("2019-06-01 09:15:00");
+//
+//            to = formatter.parse("2019-08-16 15:30:00");
+//
+//        }catch (ParseException e) {
+//
+//            e.printStackTrace();
+//
+//        }
 
         Connection con = C3poDataSource.getConnection();
 
+        PreparedStatement pp = con.prepareStatement("select * from nse_cash");
+        
+        ResultSet Rs = pp.executeQuery();
+        
+        Calendar cal = Calendar.getInstance();
+       
+//    	Iterator<Long> it = tokens.iterator(); 
 
-
-    	Iterator<Long> it = tokens.iterator(); 
-
-        while (it.hasNext()) {
+//        while (it.hasNext()) {
+        while (Rs.next()) {
 
 //        	System.out.println(it.next().toString()); 
 
-        	String a1 = it.next().toString();
-
-        	 HistoricalData historicalData = kiteConnect.getHistoricalData(from, to, a1, "30minute", false);
-
+//        	String a1 = it.next().toString();  
+        	 
+        	 cal.setTime(formatter.parse(Rs.getString("h_30")));
+        	 cal.add(Calendar.MINUTE, 31);
+        	 
+//        	 System.out.println(Rs.getString("h_30"));
+//        	 System.out.println(cal.getTime());
+//        	 
+//        	 System.exit(0);
+//        	 HistoricalData historicalData = kiteConnect.getHistoricalData(formatter.parse(formatter.format(cal.getTime())), formatter.parse((formatter.format(new Date()))), Rs.getString("instrument_token"), "30minute", false);
              
-
+        	 HistoricalData historicalData = kiteConnect.getHistoricalData(cal.getTime(), new Date(), Rs.getString("instrument_token"), "30minute", false);
+             Long Temp_instrument_token = Rs.getLong("instrument_token");
+             java.sql.Timestamp Last_date_temp = null;
              for(HistoricalData bb :historicalData.dataArrayList)
 
              {
-
+            	 
+            	
+//            	 System.out.println(bb.timeStamp);
+//            	 System.out.println(bb.open);
+//            	 System.out.println(bb.volume);
             	 String sql = "INSERT INTO historical_30min (instrument_token,timeStamp,open,high,low,close,volume)\n" + 
 
               			"VALUES (?,?,?,?,?,?,?);";
@@ -757,20 +790,14 @@ public class Examples {
 
 
 
-              	preparedStatement.setLong(1, Long.parseLong(a1));
+              	preparedStatement.setLong(1, Rs.getLong("instrument_token"));
 
               	SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
               	Date ts = new Date();
 
               	try {
-
-              		
-
-     				ts = sdf3.parse(bb.timeStamp);
-
-     				
-
+     				ts = sdf3.parse(bb.timeStamp); 
      			} catch (ParseException e) {
 
      				// TODO Auto-generated catch block
@@ -778,10 +805,12 @@ public class Examples {
      				e.printStackTrace();
 
      			}
+              	catch (Exception e) {
+              		System.out.println("-=-=-=Exception Occured-=-=-=--=-");
+              		e.printStackTrace();
+              	}
 
               	java.sql.Timestamp ts1 = new java.sql.Timestamp(ts.getTime());
-
-              	
 
               	preparedStatement.setTimestamp(2, ts1);
 
@@ -795,9 +824,17 @@ public class Examples {
 
               	preparedStatement.setLong(7, bb.volume);
 
+              	Last_date_temp = ts1;
               	preparedStatement.executeUpdate();
+              	
 
              }
+             
+             PreparedStatement pstmt_fin = con.prepareStatement("update nse_cash set h_30 = ? where instrument_token= ?");
+             pstmt_fin.setTimestamp(1, Last_date_temp);
+             pstmt_fin.setLong(2, Temp_instrument_token);
+             pstmt_fin.executeUpdate();
+             
 
         }
         System.out.println("finishes 30 min");
@@ -807,108 +844,132 @@ public class Examples {
     }
 	
 	
-	public void getHistoricalDataday(KiteConnect kiteConnect, final ArrayList<Long> tokens) throws KiteException, IOException, SQLException {
+	public void getHistoricalDataday(KiteConnect kiteConnect) throws KiteException, IOException, SQLException, ParseException {
 
         /** Get historical data dump, requires from and to date, intrument token, interval, continuous (for expired F&O contracts)
 
-         * returns historical data object which will have list of historical data inside the object.*/
+         * returns historical data object which will have list of historical data inside the object.   checking for 408065*/
 
     	
-
+		
             
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+        SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd");
+        
         Date from =  new Date();
 
         Date to = new Date();
 
-        try {
-
-            from = formatter.parse("2019-06-01 00:00:00");
-
-            to = formatter.parse("2019-08-16 19:30:00");
-
-        }catch (ParseException e) {
-
-            e.printStackTrace();
-
-        }
+//        try {
+//
+//            from = formatter.parse("2019-08-19 00:00:00");
+//
+//            to = formatter.parse("2019-08-19 16:50:00");
+//
+//        }catch (ParseException e) {
+//
+//            e.printStackTrace();
+//
+//        }
 
         Connection con = C3poDataSource.getConnection();
 
+        PreparedStatement pp = con.prepareStatement("select * from nse_cash");
+        
+        ResultSet Rs = pp.executeQuery();
+        
+        Calendar cal = Calendar.getInstance();
+       
+//    	Iterator<Long> it = tokens.iterator(); 
 
-
-    	Iterator<Long> it = tokens.iterator(); 
-
-        while (it.hasNext()) {
+//        while (it.hasNext()) {
+        while (Rs.next()) {
 
 //        	System.out.println(it.next().toString()); 
 
-        	String a1 = it.next().toString();
+//        	String a1 = it.next().toString();  
+        	 
+        	 cal.setTime(formatter1.parse(Rs.getString("h_1")));
+        	 cal.add(Calendar.DATE, 1);
 
-        	 HistoricalData historicalData = kiteConnect.getHistoricalData(from, to, a1, "day", false);
+//             System.out.println(cal.getTime());
+        	 
+//        	String a1 = it.next().toString();
 
+        	 HistoricalData historicalData = kiteConnect.getHistoricalData(cal.getTime(), new Date(), Rs.getString("instrument_token"), "day", false);
+        	 Long Temp_instrument_token = Rs.getLong("instrument_token");
+             java.sql.Timestamp Last_date_temp = null;
              
 
              for(HistoricalData bb :historicalData.dataArrayList)
 
              {
-
-            	 String sql = "INSERT INTO historical_day (instrument_token,timeStamp,open,high,low,close,volume)\n" + 
-
-              			"VALUES (?,?,?,?,?,?,?);";
+            	 
 
 
-
-              	PreparedStatement preparedStatement = con.prepareStatement(sql);
-
-
-
-              	preparedStatement.setLong(1, Long.parseLong(a1));
-
-              	SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-
-              	Date ts = new Date();
-
-              	try {
-
-              		
-
-     				ts = sdf3.parse(bb.timeStamp);
-
-     				
-
-     			} catch (ParseException e) {
-
-     				// TODO Auto-generated catch block
-
-     				e.printStackTrace();
-
-     			}
-
-              	java.sql.Timestamp ts1 = new java.sql.Timestamp(ts.getTime());
-
-              	
-
-              	preparedStatement.setTimestamp(2, ts1);
-
-              	preparedStatement.setDouble(3, bb.open);
-
-              	preparedStatement.setDouble(4, bb.high);
-
-              	preparedStatement.setDouble(5, bb.low);
-
-              	preparedStatement.setDouble(6, bb.close);
-
-              	preparedStatement.setLong(7, bb.volume);
-
-              	preparedStatement.executeUpdate();
+	            	 String sql = "INSERT INTO historical_day (instrument_token,timeStamp,open,high,low,close,volume)\n" + 
+	
+	              			"VALUES (?,?,?,?,?,?,?);";
+	
+	
+	
+	              	PreparedStatement preparedStatement = con.prepareStatement(sql);
+	
+	
+	
+	              	preparedStatement.setLong(1, Rs.getLong("instrument_token"));
+	
+	              	SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+	
+	              	Date ts = new Date();
+	
+	              	try {
+	
+	              		
+	
+	     				ts = sdf3.parse(bb.timeStamp);
+	
+	     				
+	
+	     			} catch (ParseException e) {
+	
+	     				// TODO Auto-generated catch block
+	
+	     				e.printStackTrace();
+	
+	     			}
+	
+	              	java.sql.Timestamp ts1 = new java.sql.Timestamp(ts.getTime());
+	
+	              	
+	
+	              	preparedStatement.setTimestamp(2, ts1);
+	
+	              	preparedStatement.setDouble(3, bb.open);
+	
+	              	preparedStatement.setDouble(4, bb.high);
+	
+	              	preparedStatement.setDouble(5, bb.low);
+	
+	              	preparedStatement.setDouble(6, bb.close);
+	
+	              	preparedStatement.setLong(7, bb.volume);
+	              	
+	              	Last_date_temp = ts1;
+	              	
+	              	preparedStatement.executeUpdate();
 
              }
+             
+             PreparedStatement pstmt_fin = con.prepareStatement("update nse_cash set h_1 = ? where instrument_token= ?");
+             pstmt_fin.setTimestamp(1, Last_date_temp);
+             pstmt_fin.setLong(2, Temp_instrument_token);
+             pstmt_fin.executeUpdate();
 
         }
-
+       
+       System.out.println("finishes 1 day"); 
        con.close();
 
     }
@@ -965,19 +1026,20 @@ public class Examples {
 
 //				    		System.out.println(rs3.getDouble("close"));
 
-				    		String sql4 = "INSERT INTO save_avg (instrument_token,high,low,close)\n" + 
-
-			              			"VALUES (?,?,?,?);";
+				    		
+				    		String sql4 = "UPDATE save_avg set high = ?, low = ?, close = ? where instrument_token = ?";
 
 					    	PreparedStatement stmt4 = con.prepareStatement(sql4);
 
-					    	stmt4.setLong(1,rs.getLong("instrument_token"));
+					    	
 
-					    	stmt4.setDouble(2, rs3.getDouble("high"));
+					    	stmt4.setDouble(1, rs3.getDouble("high"));
 
-					    	stmt4.setDouble(3, rs3.getDouble("low"));
+					    	stmt4.setDouble(2, rs3.getDouble("low"));
 
-					    	stmt4.setDouble(4, rs3.getDouble("close"));
+					    	stmt4.setDouble(3, rs3.getDouble("close"));
+					    	
+					    	stmt4.setLong(4,rs.getLong("instrument_token"));
 
 					    	stmt4.executeUpdate();
 
@@ -1017,7 +1079,7 @@ public class Examples {
 
         
 
-        System.out.println("finish");
+        System.out.println("finish hlc");
 
     }
 
@@ -1071,7 +1133,7 @@ public class Examples {
 
         
 
-        System.out.println("finish");
+        System.out.println("finish avg");
 
     }
 	

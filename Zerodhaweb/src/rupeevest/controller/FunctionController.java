@@ -273,12 +273,12 @@ public class FunctionController {
 
 //		    examples.getHistoricalData(TestController.kiteConnect);
 
-//		    examples.getHistoricalData30min(TestController.kiteConnect,tokens);
+//		    examples.getHistoricalData30min(TestController.kiteConnect);
 
-//		    examples.getHistoricalDataday(TestController.kiteConnect,tokens);
+//		    examples.getHistoricalDataday(TestController.kiteConnect);
 		    examples.tickerUsage(TestController.kiteConnect, tokens);    
      
-		    req.setAttribute("Stock_List", Stock.stock_list);
+//		    req.setAttribute("Stock_List", Stock.stock_list);
 		    
 		return new ModelAndView("stratergy1");
         }

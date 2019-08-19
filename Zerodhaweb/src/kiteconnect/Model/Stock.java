@@ -30,7 +30,7 @@ public class Stock {
 	public LimitedSizeQueue<Date> low_queue =new LimitedSizeQueue<Date>(9);
 	
 	StockDatatoSend dummy_obj=null;
-	
+	char flag;  // L- means low , H - means high
 	
 	public LimitedSizeQueue<Date> getHigh_queue() {
 		return high_queue;
@@ -56,6 +56,8 @@ public class Stock {
 	double prev_low;
 	double prev_close;
 	double avg_volume;
+	Date time_stamp;
+	double current_volume;
 	
 	public StockDatatoSend getDummy_obj() {
 		return dummy_obj;
@@ -128,9 +130,29 @@ public class Stock {
 	
 	public StockDatatoSend getNewDummyObj()
 	{
-		dummy_obj = new StockDatatoSend(this.instrument_token,this.LTP,this.high,this.low,this.high_counter,this.low_counter,this.prev_high,this.prev_low,this.prev_close,this.avg_volume);
+		dummy_obj = new StockDatatoSend(this.instrument_token,this.LTP,this.high,this.low,this.high_counter,this.low_counter,this.prev_high,this.prev_low,this.prev_close,this.avg_volume, this.flag ,this.current_volume , this.time_stamp);
 		return dummy_obj;
 	}
+	public char getFlag() {
+		return flag;
+	}
+	public void setFlag(char flag) {
+		this.flag = flag;
+	}
+
+	public double getCurrent_volume() {
+		return current_volume;
+	}
+	public void setCurrent_volume(double current_volume) {
+		this.current_volume = current_volume;
+	}
+	public Date getTime_stamp() {
+		return time_stamp;
+	}
+	public void setTime_stamp(Date time_stamp) {
+		this.time_stamp = time_stamp;
+	}
+	
 	
 	
 	
