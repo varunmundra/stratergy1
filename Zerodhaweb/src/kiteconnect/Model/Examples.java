@@ -22,7 +22,10 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by sujith on 15/10/16.
@@ -155,6 +158,17 @@ public class Examples {
         System.out.println("list of orders size is "+orders.size());
     }
 
+    
+    public List<Order> getOrdersZerodha(KiteConnect kiteConnect) throws KiteException, IOException {
+        // Get orders returns order model which will have list of orders inside, which can be accessed as follows,
+        List<Order> orders = kiteConnect.getOrders();
+        for(int i = 0; i< orders.size(); i++){
+            System.out.println(orders.get(i).tradingSymbol+" "+orders.get(i).orderId+" "+orders.get(i).parentOrderId+" "+orders.get(i).orderType+" "+orders.get(i).averagePrice+" "+orders.get(i).exchangeTimestamp);
+        }
+        System.out.println("list of orders size is "+orders.size());
+        return orders;
+    }
+    
     /** Get order details*/
     public void getOrder(KiteConnect kiteConnect) throws KiteException, IOException {
         List<Order> orders = kiteConnect.getOrderHistory("180111000561605");
@@ -172,6 +186,18 @@ public class Examples {
             System.out.println(trades.get(i).tradingSymbol+" "+trades.size());
         }
         System.out.println(trades.size());
+    }
+    
+    
+    public List<Trade> getTradesZerodha(KiteConnect kiteConnect) throws KiteException, IOException {
+        // Returns tradebook.
+        List<Trade> trades = kiteConnect.getTrades();
+//        for (int i=0; i < trades.size(); i++) {
+//            System.out.println(trades.get(i).tradingSymbol+" "+trades.size());
+//        }
+//        System.out.println(trades.size());
+        
+        return trades;
     }
 
     /** Get trades for an order.*/
@@ -416,12 +442,25 @@ public class Examples {
         System.out.println("mf sip: "+ kiteConnect.getMFSIP("291156521960679").instalments);
     }
 
+    
+    
+    static KiteTicker tickerProvider;
+
+    
+    public static void StopTicker()
+    {
+    	if(tickerProvider!=null)
+    	tickerProvider.disconnect();
+    	
+    	System.out.println("Ticker Stopped.....");
+    }
+    
     /** Demonstrates com.zerodhatech.ticker connection, subcribing for instruments, unsubscribing for instruments, set mode of tick data, com.zerodhatech.ticker disconnection*/
     public void tickerUsage(KiteConnect kiteConnect, final ArrayList<Long> tokens) throws IOException, WebSocketException, KiteException {
         /** To get live price use websocket connection.
          * It is recommended to use only one websocket connection at any point of time and make sure you stop connection, once user goes out of app.
          * custom url points to new endpoint which can be used till complete Kite Connect 3 migration is done. */
-        final KiteTicker tickerProvider = new KiteTicker(kiteConnect.getAccessToken(), kiteConnect.getApiKey());
+       tickerProvider = new KiteTicker(kiteConnect.getAccessToken(), kiteConnect.getApiKey());
         System.out.println("1");
         tickerProvider.setOnConnectedListener(new OnConnect() {
             @Override
@@ -474,7 +513,7 @@ public class Examples {
             public void onTicks(ArrayList<Tick> ticks) {
             	System.out.println("------------------------------------------------------------------------");
                 NumberFormat formatter = new DecimalFormat();
-//                System.out.println("ticks size "+ticks.size());
+                System.out.println("ticks size "+ticks.size());
                 if(ticks.size() > 0) {
                 	for(int i=0;i<ticks.size();i++) {
 //                		System.out.println("aaaaaaaaaaaaa"+i);
@@ -486,6 +525,16 @@ public class Examples {
                 		ob.setLTP(ticks.get(i).getLastTradedPrice());
                 		ob.setTime_stamp(ticks.get(i).getTickTimestamp()); 
             			ob.setCurrent_volume(ticks.get(i).getVolumeTradedToday());
+            			
+            			
+//            			 if(Stock.Print_TimeStamp.after(new Date()))
+//            			  {
+//            				 System.out.println("----Will print for 2 minutes-------");
+//            				 System.out.println(Stock.name_list.get(ob.getInstrument_token())+" ,******* High_now->  "+ob.getHigh_counter()+"   ******** , Low->"+ob.getLow_counter()+" , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday()+" Diff of last 10 highs->"+ob.getHigh_queue().getDifference()+" Sec");
+//            				 
+//            			  }
+            			
+            			
                 		
                 		if ( Double.compare(ticks.get(i).getLastTradedPrice(),ob.getHigh()) > 0 )
 //                		if( ticks.get(i).getLastTradedPrice() > ob.getHigh())
@@ -494,30 +543,32 @@ public class Examples {
                 			ob.setHigh_counter(ob.getHigh_counter()+1);
                 			ob.setFlag('H'); // H means high 	
                 			
-                			if((ticks.get(i).getTickTimestamp()==null))
-                			{
-                				ob.getHigh_queue().add(new Date());
-                			}
-                			else
-                			{
-                				ob.getHigh_queue().add(ticks.get(i).getTickTimestamp());
-                			}
+//                			if((ticks.get(i).getTickTimestamp()==null))
+//                			{
+//                				ob.getHigh_queue().add(new Date());
+//                			}
+//                			else
+//                			{
+//                				ob.getHigh_queue().add(ticks.get(i).getTickTimestamp());
+//                			}
                 			
-                			if(ob.getHigh_counter() >= 25)
+                			if( (ob.getHigh_counter() >=25)  )
                 			{
 //                				if(ob.getHigh_counter() ==33)
 //                				{
 //                					System.out.println("##################");
 //                				}	
-                			   
-                			 System.out.println(Stock.name_list.get(ob.getInstrument_token())+" ,******* High_now->  "+ob.getHigh_counter()+"   ******** , Low->"+ob.getLow_counter()+" , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday()+" Diff of last 10 highs->"+ob.getHigh_queue().getDifference()+" Sec");
+                				System.out.println("Dynamic Val->"+getDynamicValue()); 
+                			 System.out.println("Token No->"+ob.getInstrument_token()+"  "+Stock.name_list.get(ob.getInstrument_token())+" ,******* High_now->  "+ob.getHigh_counter()+"   ******** , Low->"+ob.getLow_counter()+" , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
 //                			 if(ob.getHigh_counter() ==33)
 //             				{
 //             					System.out.println("##################");
 //             				}
                 			}
-                			if(ob.getHigh_counter() >=25)
-                					{
+//                			if((ob.getHigh_counter() >=25) && (ob.getCurrent_volume() * ob.getLTP() > getDynamicValue()) )
+                			if( (ob.getHigh_counter() >=25) && (Double.compare((ob.getCurrent_volume() * ob.getLTP()), getDynamicValue()) > 0 ) )	
+//                			    if( (ob.getHigh_counter() >=3)  )
+                			        {
                 				        TickerEndpoint.sendData(ob.getNewDummyObj());	
                 					}
                 			
@@ -530,30 +581,32 @@ public class Examples {
                 			ob.setLow_counter(ob.getLow_counter()+1);
                 			ob.setFlag('L'); // L means low 
                 			
-                			if(ticks.get(i).getTickTimestamp()==null)
-                			{
-                				ob.getLow_queue().add(new Date());
-                			}
-                			else
-                			{
-                				ob.getLow_queue().add(ticks.get(i).getTickTimestamp());
-                			}
+//                			if(ticks.get(i).getTickTimestamp()==null)
+//                			{
+//                				ob.getLow_queue().add(new Date());
+//                			}
+//                			else
+//                			{
+//                				ob.getLow_queue().add(ticks.get(i).getTickTimestamp());
+//                			}
                 			 
-                			if(ob.getLow_counter() >=25)
+                			if( (ob.getLow_counter() >=25) && (ob.getCurrent_volume() * ob.getLTP() > getDynamicValue()) )
+//                			if( (ob.getLow_counter() >=3) )
                 			{
 //                				if(ob.getLow_counter() ==33)
 //                				{
 //                					System.out.println("##################");
 //                				}
-                				
-                				System.out.println(Stock.name_list.get(ob.getInstrument_token())+" , High->"+ob.getHigh_counter()+" ,******** Low_now->  "+ob.getLow_counter()+"   ********* , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday()+" Diff of last 10 lows->"+ob.getLow_queue().getDifference()+" Sec");
+                				System.out.println("Dynamic Val->"+getDynamicValue());
+                				System.out.println("Token No->"+ob.getInstrument_token()+" "+Stock.name_list.get(ob.getInstrument_token())+" , High->"+ob.getHigh_counter()+" ,******** Low_now->  "+ob.getLow_counter()+"   ********* , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
 //                				if(ob.getLow_counter() ==33)
 //                				{
 //                					System.out.println("##################");
 //                				}
                 			}
                 			
-                			if(ob.getLow_counter() >=25)
+                			if( (ob.getLow_counter() >=25) && (Double.compare((ob.getCurrent_volume() * ob.getLTP()), getDynamicValue()) > 0 ) )
+//                			if( (ob.getLow_counter() >=3	) )
                 					{
                 				        TickerEndpoint.sendData(ob.getNewDummyObj());	
                 					}
@@ -561,7 +614,17 @@ public class Examples {
                 			 
                 		}                		                		
                 		
+                		if(Stock.Print_counter < 500)
+                		{
+                			System.out.println("-==-=-=-=-=-IN COUNTER CHECK=-=-=-=-=-=-=-=");
+                			System.out.println("Token No->"+ob.getInstrument_token()+" "+Stock.name_list.get(ob.getInstrument_token())+" , High->"+ob.getHigh_counter()+" ,******** Low_now->  "+ob.getLow_counter()+"   ********* , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
+                			Stock.Print_counter++;
+                		}
+                		
                 		Stock.stock_list.put(instrument_token_tmp,ob);
+//                		save_State(ob);
+                		 
+                	        	
                 		
 //                		if((ob.getLow_counter() >=10) || (ob.getHigh_counter() >= 10))
 //                		{
@@ -735,7 +798,7 @@ public class Examples {
 //
 //            from = formatter.parse("2019-06-01 09:15:00");
 //
-//            to = formatter.parse("2019-08-16 15:30:00");
+//            to = formatter.parse("2019-08-20 17:30:00");
 //
 //        }catch (ParseException e) {
 //
@@ -759,9 +822,17 @@ public class Examples {
 //        	System.out.println(it.next().toString()); 
 
 //        	String a1 = it.next().toString();  
+        	 if(Rs.getString("h_30")!=null)
+        	 {
+        		 cal.setTime(formatter.parse(Rs.getString("h_30")));
+        		 cal.add(Calendar.MINUTE, 31);
+        	 }
+        	 else
+        	 {
+        		 cal.setTime(formatter.parse("2019-06-01 09:15:00"));
+        	 }
         	 
-        	 cal.setTime(formatter.parse(Rs.getString("h_30")));
-        	 cal.add(Calendar.MINUTE, 31);
+        	 
         	 
 //        	 System.out.println(Rs.getString("h_30"));
 //        	 System.out.println(cal.getTime());
@@ -770,70 +841,84 @@ public class Examples {
 //        	 HistoricalData historicalData = kiteConnect.getHistoricalData(formatter.parse(formatter.format(cal.getTime())), formatter.parse((formatter.format(new Date()))), Rs.getString("instrument_token"), "30minute", false);
              
         	 HistoricalData historicalData = kiteConnect.getHistoricalData(cal.getTime(), new Date(), Rs.getString("instrument_token"), "30minute", false);
+//        	HistoricalData historicalData = kiteConnect.getHistoricalData(from, to, Rs.getString("instrument_token"), "30minute", false);
              Long Temp_instrument_token = Rs.getLong("instrument_token");
              java.sql.Timestamp Last_date_temp = null;
-             for(HistoricalData bb :historicalData.dataArrayList)
-
-             {
-            	 
-            	
-//            	 System.out.println(bb.timeStamp);
-//            	 System.out.println(bb.open);
-//            	 System.out.println(bb.volume);
-            	 String sql = "INSERT INTO historical_30min (instrument_token,timeStamp,open,high,low,close,volume)\n" + 
-
-              			"VALUES (?,?,?,?,?,?,?);";
-
-
-
-              	PreparedStatement preparedStatement = con.prepareStatement(sql);
-
-
-
-              	preparedStatement.setLong(1, Rs.getLong("instrument_token"));
-
-              	SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-
-              	Date ts = new Date();
-
-              	try {
-     				ts = sdf3.parse(bb.timeStamp); 
-     			} catch (ParseException e) {
-
-     				// TODO Auto-generated catch block
-
-     				e.printStackTrace();
-
-     			}
-              	catch (Exception e) {
-              		System.out.println("-=-=-=Exception Occured-=-=-=--=-");
-              		e.printStackTrace();
-              	}
-
-              	java.sql.Timestamp ts1 = new java.sql.Timestamp(ts.getTime());
-
-              	preparedStatement.setTimestamp(2, ts1);
-
-              	preparedStatement.setDouble(3, bb.open);
-
-              	preparedStatement.setDouble(4, bb.high);
-
-              	preparedStatement.setDouble(5, bb.low);
-
-              	preparedStatement.setDouble(6, bb.close);
-
-              	preparedStatement.setLong(7, bb.volume);
-
-              	Last_date_temp = ts1;
-              	preparedStatement.executeUpdate();
-              	
-
-             }
-             
-             PreparedStatement pstmt_fin = con.prepareStatement("update nse_cash set h_30 = ? where instrument_token= ?");
-             pstmt_fin.setTimestamp(1, Last_date_temp);
-             pstmt_fin.setLong(2, Temp_instrument_token);
-             pstmt_fin.executeUpdate();
+             ArrayList<HistoricalData> lst = (ArrayList<HistoricalData>) historicalData.dataArrayList;
+//             if(lst.size()==0)
+//             {
+//            	
+//            	 from = formatter.parse("2019-06-15 09:15:00"); 
+//            	 System.out.println("Not Found For---->>>"+Rs.getString("instrument_token")+" trying with date ->"+from);
+//            	 historicalData = kiteConnect.getHistoricalData(from, new Date(), Rs.getString("instrument_token"), "30minute", false);
+//            	 lst = (ArrayList<HistoricalData>) historicalData.dataArrayList;
+//             }
+//             for(HistoricalData bb :historicalData.dataArrayList)
+               if( lst.size()>0)
+               {
+			            	   for(HistoricalData bb : lst)
+			                   {
+			                  	 
+			                  	
+			//                  	 System.out.println(bb.timeStamp);
+			                  	 System.out.println(bb.open);
+			//                  	 System.out.println(bb.volume);
+			                  	 String sql = "INSERT INTO historical_30min (instrument_token,timeStamp,open,high,low,close,volume)\n" + 
+			
+			                    			"VALUES (?,?,?,?,?,?,?);";
+			
+			
+			
+			                    	PreparedStatement preparedStatement = con.prepareStatement(sql);
+			
+			
+			
+			                    	preparedStatement.setLong(1, Rs.getLong("instrument_token"));
+			
+			                    	SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+			
+			                    	Date ts = new Date();
+			
+			                    	try {
+			           				ts = sdf3.parse(bb.timeStamp); 
+			           			} catch (ParseException e) {
+			
+			           				// TODO Auto-generated catch block
+			                         System.out.println("----parse Exception-----");
+			           				e.printStackTrace();
+			
+			           			}
+			                    	catch (Exception e) {
+			                    		System.out.println("-=-=-=Exception Occured-=-=-=--=-");
+			                    		e.printStackTrace();
+			                    	}
+			
+			                    	java.sql.Timestamp ts1 = new java.sql.Timestamp(ts.getTime());
+			
+			                    	preparedStatement.setTimestamp(2, ts1);
+			
+			                    	preparedStatement.setDouble(3, bb.open);
+			
+			                    	preparedStatement.setDouble(4, bb.high);
+			
+			                    	preparedStatement.setDouble(5, bb.low);
+			
+			                    	preparedStatement.setDouble(6, bb.close);
+			
+			                    	preparedStatement.setLong(7, bb.volume);
+			
+			                    	Last_date_temp = ts1;
+			                    	preparedStatement.executeUpdate();
+			                    	
+			
+			                   }
+               }
+               if (Last_date_temp!=null) {
+		             PreparedStatement pstmt_fin = con.prepareStatement("update nse_cash set h_30 = ? where instrument_token= ?");
+		             pstmt_fin.setTimestamp(1, Last_date_temp);
+		             pstmt_fin.setLong(2, Temp_instrument_token);
+		             pstmt_fin.executeUpdate();
+               }
              
 
         }
@@ -862,11 +947,15 @@ public class Examples {
         Date to = new Date();
 
 //        try {
-//
+
 //            from = formatter.parse("2019-08-19 00:00:00");
 //
 //            to = formatter.parse("2019-08-19 16:50:00");
+            
+//            from = formatter.parse("2019-06-01 00:00:00");
 //
+//            to = formatter.parse("2019-08-21 00:00:00");
+
 //        }catch (ParseException e) {
 //
 //            e.printStackTrace();
@@ -890,14 +979,25 @@ public class Examples {
 
 //        	String a1 = it.next().toString();  
         	 
-        	 cal.setTime(formatter1.parse(Rs.getString("h_1")));
-        	 cal.add(Calendar.DATE, 1);
+//        	 cal.setTime(formatter1.parse(Rs.getString("h_1")));
+//        	 cal.add(Calendar.DATE, 1);
 
+        	 if(Rs.getString("h_1")!=null)
+        	 {
+        		 cal.setTime(formatter1.parse(Rs.getString("h_1")));
+            	 cal.add(Calendar.DATE, 1);
+        	 }
+        	 else
+        	 {
+        		 cal.setTime(formatter.parse("2019-06-01 00:00:00"));
+        	 }
+        	 
+        	 
 //             System.out.println(cal.getTime());
         	 
 //        	String a1 = it.next().toString();
 
-        	 HistoricalData historicalData = kiteConnect.getHistoricalData(cal.getTime(), new Date(), Rs.getString("instrument_token"), "day", false);
+        	 HistoricalData historicalData = kiteConnect.getHistoricalData(cal.getTime(), to, Rs.getString("instrument_token"), "day", false);
         	 Long Temp_instrument_token = Rs.getLong("instrument_token");
              java.sql.Timestamp Last_date_temp = null;
              
@@ -961,11 +1061,12 @@ public class Examples {
 	              	preparedStatement.executeUpdate();
 
              }
-             
+             if (Last_date_temp!=null) {
              PreparedStatement pstmt_fin = con.prepareStatement("update nse_cash set h_1 = ? where instrument_token= ?");
              pstmt_fin.setTimestamp(1, Last_date_temp);
              pstmt_fin.setLong(2, Temp_instrument_token);
              pstmt_fin.executeUpdate();
+             }
 
         }
        
@@ -1087,16 +1188,29 @@ public class Examples {
 
     public void saveAvgVolume()  {
 
+    	
+    	
+    	
+    	
         /** Save avg volume and h l c  */
 
     	try {
 
 			Connection con = C3poDataSource.getConnection();
+			String sql1 = "select distinct(instrument_token) from historical_day;";
 
-			String sql = "select avg(volume) as avg_vol,instrument_token  from historical_30min where hour(timeStamp) = 9 and minute(timeStamp) = 15 group by instrument_token;";
+			PreparedStatement stmt2 = con.prepareStatement(sql1);
+
+			ResultSet rs2 = stmt2.executeQuery();
+
+			 while(rs2.next())
+
+			    {
+			
+			String sql = "select avg(volume) as avg_vol  from (select volume from historical_day where instrument_token = ? order by timeStamp desc limit 50) tmp;";
 
 			PreparedStatement stmt = con.prepareStatement(sql);
-
+			stmt.setLong(1, rs2.getLong("instrument_token"));
 			ResultSet rs = stmt.executeQuery();
 
 			 while(rs.next())
@@ -1109,14 +1223,14 @@ public class Examples {
 
 			    	stmt4.setDouble(1,rs.getDouble("avg_vol"));
 
-			    	stmt4.setLong(2,rs.getLong("instrument_token"));
+			    	stmt4.setLong(2,rs2.getLong("instrument_token"));
 
 			    	stmt4.executeUpdate();
 
 			    	
 
 			    }
-
+			    }
 			 con.close();
 
 		} catch (SQLException e) {
@@ -1137,7 +1251,100 @@ public class Examples {
 
     }
 	
+    
+    
+    public static int getDynamicValue()
+	{
+		  int x = 10000000;
+		  LocalTime now = LocalTime.now();
+		  LocalTime t1 = LocalTime.parse( "09:15" );		
+		  while(t1.isBefore(now))
+		  {
+			  x = x+10000000;
+			  t1 = t1.plusMinutes(15);
+//			  System.out.println(t1+" "+x);
+		  }
+		return x;
+	}
+	
+    
+//    public static int getDynamicVol()
+//   	{
+//   		  int x = 0;
+//   		  LocalTime now = LocalTime.now();
+//   		  LocalTime t1 = LocalTime.parse( "09:15" );		
+//   		  while(t1.isBefore(now))
+//   		  {
+//   			  x = x+50;
+//   			  t1 = t1.plusMinutes(15);
+//   			  System.out.println(t1+" "+x);
+//   		  }
+//   		return x;
+//   	}
 	
 	
-	
+    
+    public static void save_State(Stock ob)
+    {
+//    	 System.out.println(" In .....Save State.......");
+        ExecutorService pool = Executors.newCachedThreadPool();
+        
+				        Runnable task = new Runnable() {
+				            public void run() {
+				            	Connection con = null;
+				            	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				            	  
+				            	try
+				            	{
+				            	con = C3poDataSource.getConnection();
+				                String sql="update current_state set LTP = ? ,high = ?,low = ?,high_counter = ?,low_counter = ?,prev_high = ?,prev_low = ?,prev_close = ?,avg_volume = ?,time_stamp = ?,current_volume = ? where instrument_token = ?";
+				                
+				//("+ob.getInstrument_token()+","+ob.getLTP()+","+ob.getHigh()+","+ob.getLow()+","+ob.getHigh_counter()+","+ob.getLow_counter()+","+ob.prev_high+","+ob.getPrev_low()+","+ob.getPrev_close()+","+ob.getAvg_volume()+",'"+ob.getTime_stamp()+"',"+ob.getCurrent_volume()+")";
+				
+				                PreparedStatement preparedStatement = con.prepareStatement(sql);
+				                
+				                preparedStatement.setDouble(1,ob.getLTP());
+				                preparedStatement.setDouble(2, ob.getHigh());
+				                preparedStatement.setDouble(3, ob.getLow());
+				                preparedStatement.setLong(4, ob.getHigh_counter());
+				                preparedStatement.setLong(5, ob.getLow_counter());
+				                preparedStatement.setDouble(6, ob.getPrev_high());
+				                preparedStatement.setDouble(7, ob.getPrev_low());
+				                preparedStatement.setDouble(8, ob.getPrev_close());
+				                preparedStatement.setDouble(9, ob.getAvg_volume());
+				                if(ob.getTime_stamp()!=null)
+				                {
+				                  preparedStatement.setString(10, formatter.format(ob.getTime_stamp()));
+				                }
+				                else
+				                {
+				                	preparedStatement.setString(10, null);	
+				                }
+				                preparedStatement.setDouble(11, ob.getCurrent_volume());
+				                preparedStatement.setLong(12, ob.getInstrument_token());
+				                preparedStatement.executeUpdate();
+				                
+//				                System.out.println("=====DATA SAVED IN DB-=-=-=-=-");
+				            	}
+				            	catch (Exception e) {
+				            		System.out.println("Error Occured while saving State in DB");
+									e.printStackTrace();
+								}
+				            	finally
+				            	{
+				            		try
+				            		{
+				            			if(con!=null)
+				            			con.close();
+				            		}
+				            		catch (Exception e) {
+										e.printStackTrace();
+									}
+				            	}
+				            }
+				        };
+        
+        
+        pool.execute(task);
+    }
 }

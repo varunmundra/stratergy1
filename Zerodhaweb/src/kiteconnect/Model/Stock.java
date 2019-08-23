@@ -21,29 +21,54 @@ public class Stock {
 	}
 	
 	
+	
+	
+	public Stock(long instrument_token, double lTP, double high, double low, int high_counter, int low_counter,
+			double prev_high, double prev_low, double prev_close, double avg_volume, Date time_stamp,
+			double current_volume) {
+		super();
+		this.instrument_token = instrument_token;
+		LTP = lTP;
+		this.high = high;
+		this.low = low;
+		this.high_counter = high_counter;
+		this.low_counter = low_counter;
+		this.prev_high = prev_high;
+		this.prev_low = prev_low;
+		this.prev_close = prev_close;
+		this.avg_volume = avg_volume;
+		this.time_stamp = time_stamp;
+		this.current_volume = current_volume;
+	}
+
+
+
+
+	public static int Print_counter;
+	
 //	public static ArrayList<Stock> stock_list = new ArrayList<Stock>();
 	
 	public static HashMap<Long, Stock> stock_list = new HashMap<Long, Stock>();
 	public static HashMap<Long, String> name_list = new HashMap<Long, String>(); 
 	
-	public LimitedSizeQueue<Date> high_queue =new LimitedSizeQueue<Date>(9);
-	public LimitedSizeQueue<Date> low_queue =new LimitedSizeQueue<Date>(9);
+//	public LimitedSizeQueue<Date> high_queue =new LimitedSizeQueue<Date>(9);
+//	public LimitedSizeQueue<Date> low_queue =new LimitedSizeQueue<Date>(9);
 	
 	StockDatatoSend dummy_obj=null;
 	char flag;  // L- means low , H - means high
 	
-	public LimitedSizeQueue<Date> getHigh_queue() {
-		return high_queue;
-	}
-	public void setHigh_queue(LimitedSizeQueue<Date> high_queue) {
-		this.high_queue = high_queue;
-	}
-	public LimitedSizeQueue<Date> getLow_queue() {
-		return low_queue;
-	}
-	public void setLow_queue(LimitedSizeQueue<Date> low_queue) {
-		this.low_queue = low_queue;
-	}
+//	public LimitedSizeQueue<Date> getHigh_queue() {
+//		return high_queue;
+//	}
+//	public void setHigh_queue(LimitedSizeQueue<Date> high_queue) {
+//		this.high_queue = high_queue;
+//	}
+//	public LimitedSizeQueue<Date> getLow_queue() {
+//		return low_queue;
+//	}
+//	public void setLow_queue(LimitedSizeQueue<Date> low_queue) {
+//		this.low_queue = low_queue;
+//	}
 
 
 	long instrument_token;
