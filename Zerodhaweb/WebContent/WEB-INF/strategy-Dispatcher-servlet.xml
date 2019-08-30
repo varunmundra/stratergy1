@@ -24,5 +24,8 @@
 		<property name="prefix" value="/WEB-INF/view/" />
 		<property name="suffix" value=".jsp" />
 	</bean>
+	
+	<mvc:resources mapping="/resources/**" location="/StaticResources/theme1/"  
+	cache-period="31556926"/>
  
 </beans>

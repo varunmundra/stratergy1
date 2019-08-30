@@ -11,7 +11,7 @@ public class Stock {
 	public Stock()
 	{
 		high=0;
-		low=0;
+		low=5000000;
 	}
 	public Stock(long token_no)
 	{
@@ -51,11 +51,16 @@ public class Stock {
 	public static HashMap<Long, Stock> stock_list = new HashMap<Long, Stock>();
 	public static HashMap<Long, String> name_list = new HashMap<Long, String>(); 
 	
-//	public LimitedSizeQueue<Date> high_queue =new LimitedSizeQueue<Date>(9);
+	public ArrayList<Ticker> minute_data = new ArrayList<Ticker>(); // for minute data calculation
+	
+	public LimitedSizeQueue<Date> high_queue =new LimitedSizeQueue<Date>(9);
 //	public LimitedSizeQueue<Date> low_queue =new LimitedSizeQueue<Date>(9);
 	
 	StockDatatoSend dummy_obj=null;
 	char flag;  // L- means low , H - means high
+	
+	
+	double temp_previous_volume; // used for minute data calculation
 	
 //	public LimitedSizeQueue<Date> getHigh_queue() {
 //		return high_queue;
@@ -177,6 +182,19 @@ public class Stock {
 	public void setTime_stamp(Date time_stamp) {
 		this.time_stamp = time_stamp;
 	}
+	public ArrayList<Ticker> getMinute_data() {
+		return minute_data;
+	}
+	public void setMinute_data(ArrayList<Ticker> minute_data) {
+		this.minute_data = minute_data;
+	}
+	public double getTemp_previous_volume() {
+		return temp_previous_volume;
+	}
+	public void setTemp_previous_volume(double temp_previous_volume) {
+		this.temp_previous_volume = temp_previous_volume;
+	}
+	
 	
 	
 	

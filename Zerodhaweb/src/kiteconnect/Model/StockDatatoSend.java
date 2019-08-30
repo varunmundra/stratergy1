@@ -16,12 +16,11 @@ public class StockDatatoSend {
 	}
 	
 	
-	
 	public StockDatatoSend(long instrument_token, double lTP, double high, double low, int high_counter,
 			int low_counter,double prev_high,double prev_low,double prev_close,double avg_volume ,char flag, double current_volume , Date time_stamp) {
 		super();
 		this.instrument_token = instrument_token;
-		LTP = lTP;
+		this.LTP = lTP;
 		this.high = high;
 		this.low = low;
 		this.high_counter = high_counter;

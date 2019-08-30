@@ -15,7 +15,10 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://momentjs.com/downloads/moment-with-locales.js"></script>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+ <script src="<c:url value="/resources/js/sortable.min.js" />"></script>
+ <link href="<c:url value="/resources/css/sortable-theme-bootstrap.css" />" rel="stylesheet">
 <style type="text/css">
+
 .container-fluid {
 min-height: 1000px;
 }
@@ -40,11 +43,58 @@ color: #212529;
 font-size: 13px;
 }
 .table tr th {
-background: #f1f2f2;
+background: #d8d9d9;
+border-bottom: 0;
+}
+/* .table tr td {
+    word-break: break-word;
+}
+.table tr th:nth-child(1), .table tr td:nth-child(1) {
+	width: 80px;
+}
+.table tr th:nth-child(2), .table tr td:nth-child(2) {
+	width: 117px;
+}
+.table tr th:nth-child(3), .table tr td:nth-child(3) {
+	width: 75px;
+}
+.table tr th:nth-child(4), .table tr td:nth-child(4) {
+	width: 65px;
+}
+.table tr th:nth-child(5), .table tr td:nth-child(5) {
+	width: 65px;
+}
+.table tr th:nth-child(6), .table tr td:nth-child(6) {
+	width: 65px;
+}
+.table tr th:nth-child(7), .table tr td:nth-child(7) {
+	width: 75px;
+}
+.table tr th:nth-child(8), .table tr td:nth-child(8) {
+	width: 100px;
+} */
+
+table[data-sortable] th, table[data-sortable] td {
+    padding: 0.25rem;
 }
 .table-bordered td, .table-bordered th {
-    border: 1px solid #ccc;
+    border-color: #b8b8b8; 
+    
 }
+.fixed_header{
+    width: 100%;
+    table-layout: fixed;
+}
+
+.fixed_header tbody{
+  display:block;
+  width: 100%;
+  overflow: auto;
+  max-height: 50vh;
+}
+ .fixed_header thead tr {
+   display: flex;
+} 
 h5 {
     padding: 0.3rem 0;
     margin: 0;
@@ -58,6 +108,8 @@ h5 {
 
 </style>
 <script type="text/javascript">
+var display_array_low= new Array();
+var display_array_high= new Array();
 
 /* var mq = window.matchMedia("screen and (min-width: 768px)");
 if (mq.matches) {      
@@ -91,7 +143,20 @@ webSocket.onopen = function(event) {
 };
 
 
-
+function check_connection()
+{
+	
+    if(webSocket.readyState === WebSocket.CLOSED)
+    	{
+    	  alert("Web Socket CLosed in ClientSide");
+    	}
+    else{
+    	console.log("connection Ok");
+    }
+	
+}
+var high_tab_row_counter=0;
+var low_tab_row_counter=0;
 
 webSocket.onmessage = function(msg) {
    /*  onMessage(event) */
@@ -100,21 +165,26 @@ webSocket.onmessage = function(msg) {
    $("#refresh").val("updated");
    
    var stock = JSON.parse(msg.data);
+  
    
   /*  $("#"+stock.instrument_token).remove(); */
    if(stock.flag=='L')
 	{
 	   /* $("#low_heading").remove(); */
 	   /* $("#low_"+stock.instrument_token).remove(); */
-	   var perc_change = ((stock.LTP - stock.prev_close)/(stock.prev_close))*100;
+	   var perc_change = ((stock.low - stock.prev_close)/(stock.prev_close))*100;
 	   var avg_vol_perc = ((stock.current_volume / stock.avg_volume)*100);
 	   
-	  if((parseInt(avg_vol_perc) > getDynamicVolume())&&(perc_change>-10) &&(perc_change<10)) 
+	    if((parseInt(avg_vol_perc) > getDynamicVolume())&&(perc_change>-10) &&(perc_change<10))  
 		   {
 	    	
-	    	 if(parseInt(stock.low_counter)==40)
+	    	  if((parseInt(stock.low_counter)==40) ||  ((display_array_low.indexOf(stock.instrument_token)== -1) && stock.low_counter > 40) ) 
+	    	/*  if(parseInt(stock.low_counter)==40) */
 	          {
-	    		 var tab_row = "<tr id='low_"+stock.instrument_token+"' class='myred'><td>"+moment(stock.time_stamp.toString()).format('hh:mm:ss')+"</td><td>"+stock.stock_name+"</td><td>"+stock.LTP+"</td><td>"+perc_change.toFixed(2)+"</td><td>"+stock.low_counter+"</td><td>"+commaSeparateNumber(avg_vol_perc.toFixed(0))+"</td><td>"+stock.prev_low+"</td><td>"+commaSeparateNumber(stock.current_volume)+"</td></tr>";
+	    		 var tab_row = "<tr id='low_"+stock.instrument_token+"' class='myred'><td>"+moment(stock.time_stamp.toString()).format('hh:mm:ss')+"</td><td>"+stock.stock_name+"</td><td>"+stock.low+"</td><td>"+perc_change.toFixed(2)+"</td><td>"+stock.low_counter+"</td><td>"+commaSeparateNumber(avg_vol_perc.toFixed(0))+"</td><td>"+stock.prev_low+"</td><td>"+commaSeparateNumber(stock.current_volume)+"</td></tr>";
+	    		  display_array_low.push(stock.instrument_token);
+	    		  Save_Marked_data(stock);
+	    		 
 	    	  }
 	    	 else
 	    	  {
@@ -124,17 +194,30 @@ webSocket.onmessage = function(msg) {
 	    			    timeStamp = moment(stock.time_stamp.toString()).format('hh:mm:ss');
 	    			 }
 	    		 
-	    		 var tab_row = "<tr id='low_"+stock.instrument_token+"' ><td>"+timeStamp+"</td><td>"+stock.stock_name+"</td><td>"+stock.LTP+"</td><td>"+perc_change.toFixed(2)+"</td><td>"+stock.low_counter+"</td><td>"+commaSeparateNumber(avg_vol_perc.toFixed(0))+"</td><td>"+stock.prev_low+"</td><td>"+commaSeparateNumber(stock.current_volume)+"</td></tr>";	 
+	    		 var tab_row = "<tr id='low_"+stock.instrument_token+"' ><td>"+timeStamp+"</td><td>"+stock.stock_name+"</td><td>"+stock.low+"</td><td>"+perc_change.toFixed(2)+"</td><td>"+stock.low_counter+"</td><td>"+commaSeparateNumber(avg_vol_perc.toFixed(0))+"</td><td>"+stock.prev_low+"</td><td>"+commaSeparateNumber(stock.current_volume)+"</td></tr>";	 
 	    	   }
 		     	   
+	    	  low_tab_row_counter++;
 		   
 		     
 		     /* $("#low_table").prepend(tab_row); */
-		      $("#low_heading").after(tab_row);
-		     
+		     /*  $("#low_heading").after(tab_row); */
+		    /*   $("#low_heading").insertBefore('table > tbody > tr:first'); */
+		      /* $("#low_heading").prependTo("table > tbody"); */
+		      
+		      if(low_tab_row_counter==1)
+		    	  {
+		    	  $("#low_heading").append(tab_row);
+		    	  }
+		      else
+		    	  {
+		    	  $("#low_heading").prepend(tab_row);
+		    	  }
+		      /* $("#low_heading tbody").prepend(tab_row); */
 		     
 		      /*  save_sate(stock); */
 		   }
+		   
 	
 	}
    else if(stock.flag=='H')
@@ -142,13 +225,16 @@ webSocket.onmessage = function(msg) {
 	  /*  $("#high_heading").remove(); */
 	   /* $("#high_"+stock.instrument_token).remove(); */
 	   var avg_vol_perc = ((stock.current_volume / stock.avg_volume)*100);
-	   var perc_change = ((stock.LTP - stock.prev_close)/(stock.prev_close))*100;
+	   var perc_change = ((stock.high - stock.prev_close)/(stock.prev_close))*100;
 	   
-	  if((parseInt(avg_vol_perc) > getDynamicVolume())&&(perc_change<10) &&(perc_change>-10))  
+	   if((parseInt(avg_vol_perc) > getDynamicVolume())&&(perc_change<10) &&(perc_change>-10)) 
 	   { 
-		  if(parseInt(stock.high_counter)==40)
+		   /* if(parseInt(stock.high_counter)==40) */
+		   if(parseInt(stock.high_counter)==40 || ((display_array_high.indexOf(stock.instrument_token)== -1) && stock.high_counter > 40)) 
           {
-			  var tab_row1 = "<tr id='high_"+stock.instrument_token+"' class='mygreen'><td>"+moment(stock.time_stamp.toString()).format('hh:mm:ss')+"</td><td>"+stock.stock_name+"</td><td>"+stock.LTP+"</td><td>"+perc_change.toFixed(2)+"</td><td class='lw_vol'>"+stock.high_counter+"</td><td>"+commaSeparateNumber(avg_vol_perc.toFixed(0))+"</td><td>"+stock.prev_high+"</td><td>"+commaSeparateNumber(stock.current_volume)+"</td></tr>";
+			  var tab_row1 = "<tr id='high_"+stock.instrument_token+"' class='mygreen'><td>"+moment(stock.time_stamp.toString()).format('hh:mm:ss')+"</td><td>"+stock.stock_name+"</td><td>"+stock.high+"</td><td>"+perc_change.toFixed(2)+"</td><td class='lw_vol'>"+stock.high_counter+"</td><td>"+commaSeparateNumber(avg_vol_perc.toFixed(0))+"</td><td>"+stock.prev_high+"</td><td>"+commaSeparateNumber(stock.current_volume)+"</td></tr>";
+			  display_array_high.push(stock.instrument_token);
+			  Save_Marked_data(stock);
           }
 		  else
           {
@@ -157,12 +243,23 @@ webSocket.onmessage = function(msg) {
 	    			 {
 	    			    timeStamp = moment(stock.time_stamp.toString()).format('hh:mm:ss');
 	    			 } 
-			  var tab_row1 = "<tr id='high_"+stock.instrument_token+"'><td>"+timeStamp+"</td><td>"+stock.stock_name+"</td><td>"+stock.LTP+"</td><td>"+perc_change.toFixed(2)+"</td><td class='lw_vol'>"+stock.high_counter+"</td><td>"+commaSeparateNumber(avg_vol_perc.toFixed(0))+"</td><td>"+stock.prev_high+"</td><td>"+commaSeparateNumber(stock.current_volume)+"</td></tr>";
+			  var tab_row1 = "<tr id='high_"+stock.instrument_token+"'><td>"+timeStamp+"</td><td>"+stock.stock_name+"</td><td>"+stock.high+"</td><td>"+perc_change.toFixed(2)+"</td><td class='lw_vol'>"+stock.high_counter+"</td><td>"+commaSeparateNumber(avg_vol_perc.toFixed(0))+"</td><td>"+stock.prev_high+"</td><td>"+commaSeparateNumber(stock.current_volume)+"</td></tr>";
           }
-		   	   
+		   high_tab_row_counter++;
+		   
 		  /*  $("#high_table").prepend(tab_row1); */
-		   $("#high_heading").after(tab_row1);
-		  
+		   /* $("#high_heading").after(tab_row1); */
+		   /* $("#high_heading").insertBefore('table > tbody > tr:first'); */
+		   /* $("#high_heading tbody").append(tab_row1); */
+		   
+		   if(high_tab_row_counter==1)
+	    	  {
+	    	  $("#high_heading").append(tab_row1);
+	    	  }
+	      else
+	    	  {
+	    	  $("#high_heading").prepend(tab_row1);
+	    	  }
 		  
 		   /* save_sate(stock); */
 	   }
@@ -261,11 +358,40 @@ webSocket.onmessage = function(msg) {
 		  }}); */	  
  }
  
+ 
+ function Save_Marked_data(stock)
+ {
+	$.ajax({url: "/Zerodhaweb/function/SaveMarkedData", data:JSON.stringify(stock) , type:"POST" , contentType:"application/json" , success: function(result)
+	 {
+	    if(result=="success")
+	    {	
+	    	console.log("SUccess");
+	    }
+	    else
+	    	{
+	    	console.log(result);
+	    	}
+	  }});	 
+ }
 
  
  $(document).ready(function() 
 		 {
 	      console.log($("#refresh").val());  	      
+	      
+	      
+	     /*  $(".table tbody").sortable({
+	            items: 'tr:not(:first)'
+	        }); */
+	      
+	      /* $('#low_table').DataTable();
+	      $('.dataTables_length').addClass('bs-select');
+	      
+	      
+	      $('#high_table').DataTable();
+	      $('.dataTables_length').addClass('bs-select'); */
+	      
+	      
 	     });
 
 </script>
@@ -291,24 +417,24 @@ webSocket.onmessage = function(msg) {
 
 
 <h5 class="text-center hightab_h5">High Table</h5>
-<table id="high_table" class="one table table-bordered table-sm">
+<table id="high_table" class="one table table-bordered table-sm" data-sortable>
   <thead>
-    <tr ><th>Time Stamp</th><th>Token Name</th><th>LTP</th><th>(%) Change</th><th>High Count</th><th>Volume (%)</th><th>Prev. Day High</th><th>Volume</th></tr>
+    <tr ><th data-sortable-type="date">Time Stamp</th><th data-sortable-type="alpha">Token Name</th><th data-sortable-type="numeric">Price</th><th data-sortable-type="numeric">(%) Change</th><th data-sortable-type="numeric">High Count</th><th data-sortable-type="numeric">Volume (%)</th><th data-sortable-type="numeric">Prev. Day High</th><th data-sortable-type="numeric">Volume</th></tr>
   </thead>
-  <tbody >
-  <tr style='display:none' id='high_heading'><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tbody id='high_heading'>
+  <!-- <tr style='display:none' id='high_heading'><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> -->
   </tbody>
 </table>
 
 </div>
 <div class="col-6">
 <h5 class="text-center lowtab_h5">Low Table</h5>
-<table id="low_table" class="two table table-bordered table-sm">
+<table id="low_table" class="two table table-bordered table-sm" data-sortable>
   <thead>
-     <tr ><th>Time Stamp</th><th>Token Name</th><th>LTP</th><th>(%) Change</th><th>Low Count</th><th>Volume (%)</th><th>Prev. Day Low</th><th>Volume</th></tr>
+     <tr ><th data-sortable-type="date">Time Stamp</th><th data-sortable-type="alpha">Token Name</th><th data-sortable-type="numeric">Price</th><th data-sortable-type="numeric">(%) Change</th><th data-sortable-type="numeric">Low Count</th><th data-sortable-type="numeric">Volume (%)</th><th data-sortable-type="numeric">Prev. Day Low</th><th data-sortable-type="numeric">Volume</th></tr>
   </thead>
-   <tbody >
-   <tr style='display:none' id='low_heading'><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+   <tbody id='low_heading'>
+   <!-- <tr style='display:none' id='low_heading'><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> -->
    </tbody>
 </table>
 

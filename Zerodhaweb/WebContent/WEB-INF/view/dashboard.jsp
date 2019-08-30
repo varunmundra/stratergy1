@@ -12,7 +12,7 @@
 <script type="text/javascript">
 function remove_state()
 {	 
-	alert("remove state called");
+	/* alert("remove state called"); */
 	
 	 $.ajax({url: "/Zerodhaweb/function/ClearStateDB", success: function(result)
 		 {
@@ -27,6 +27,54 @@ function remove_state()
 		  }});	
 }
 
+
+function start_day_download()
+{
+	 $.ajax({url: "/Zerodhaweb/Download/DownloadDay", success: function(result)
+		 {
+		    if(result=="success")
+		    {
+		    	alert("Data Imported");	
+		    }
+		    else
+		    {
+		    	 alert(result);
+		    }
+		  }});
+	
+	
+}
+
+function start_hlc_download()
+{
+	$.ajax({url: "/Zerodhaweb/Download/Hlc", success: function(result)
+		 {
+		    if(result=="success")
+		    {
+		    	alert("Data Imported");	
+		    }
+		    else
+		    {
+		    	 alert(result);
+		    }
+		  }});
+}
+
+function start_average_volume()
+{
+	$.ajax({url: "/Zerodhaweb/Download/AvgVolume", success: function(result)
+		 {
+		    if(result=="success")
+		    {
+		    	alert("Data Imported");	
+		    }
+		    else
+		    {
+		    	 alert(result);
+		    }
+		  }});
+}
+
 </script>
 </head>
 <body>
@@ -37,5 +85,11 @@ function remove_state()
   
   
    <input class="btn btn-primary float-left" type="button" onclick="remove_state()" value="DELETE Current STATE"/>
+    
+   <input class="btn btn-primary float-right" type="button" onclick="start_day_download()" value="DownLoad Day Data"/>
+  
+   <input class="btn btn-primary float-right" type="button" onclick="start_hlc_download()" value="Caculate HLC"/>
+   
+   <input class="btn btn-primary float-right" type="button" onclick="start_average_volume()" value="Caculate Volume Average"/>
 </body>
 </html>

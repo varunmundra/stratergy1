@@ -28,8 +28,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.zerodhatech.kiteconnect.KiteConnect;
 
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
@@ -221,6 +221,7 @@ public class FunctionController {
 //								    String[] nextRecord; 
 							         con = C3poDataSource.getConnection();
 							         
+//							         where cs.instrument_token=408065
 							        PreparedStatement pp = con.prepareStatement("select cs.* from nse_cash cash join current_state cs on cs.instrument_token=cash.instrument_token"); // for CASH
 //							        PreparedStatement pp = con.prepareStatement("select cs.* from mcx mx join current_state cs on cs.instrument_token=mx.instrument_token"); // for MCX
 							        
@@ -550,6 +551,67 @@ public class FunctionController {
 		
 		
 		return null;
+	}
+	
+	
+	@RequestMapping(value = "/SaveMarkedData" , method = RequestMethod.POST, produces = "application/text" , consumes = "application/json")
+	@ResponseBody
+	public String Average_Volume(@RequestBody StockDatatoSend stockObj , HttpServletRequest request )
+	{ 
+		Connection con = null;
+	    PreparedStatement preparedStatement=null;
+	    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	    
+		System.out.println("in this function");
+		String responce=null;
+		
+		try
+		{
+			con = C3poDataSource.getConnection();
+//			System.out.println("Object Received--->>>"+stockObj);
+//			System.out.println(stockObj.getInstrument_token());
+ 		    
+			String sql = "insert into MarkedData(day,instrument_token,LTP,high,low,high_counter,low_counter,prev_high,prev_low,prev_close,avg_volume,stock_name,time_stamp,current_volume) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"; 
+			preparedStatement = con.prepareStatement(sql);
+			
+						preparedStatement.setString(1, formatter.format(new Date()));
+						preparedStatement.setLong(2,stockObj.getInstrument_token());
+						preparedStatement.setDouble(3, stockObj.getLTP());
+						preparedStatement.setDouble(4 ,stockObj.getHigh());
+						preparedStatement.setDouble(5 ,stockObj.getLow());
+						preparedStatement.setLong(6, stockObj.getHigh_counter());
+						preparedStatement.setLong(7, stockObj.getLow_counter());
+						preparedStatement.setDouble(8 ,stockObj.getPrev_high());
+						preparedStatement.setDouble(9 ,stockObj.getPrev_low());
+						preparedStatement.setDouble(10 ,stockObj.getPrev_close());
+						preparedStatement.setDouble(11 ,stockObj.getAvg_volume());
+						preparedStatement.setString(12, stockObj.getStock_name());
+						
+						if(stockObj.getTime_stamp()!=null)
+						{
+							java.sql.Timestamp ts1 = new java.sql.Timestamp(stockObj.getTime_stamp().getTime());
+				            preparedStatement.setTimestamp(13,ts1);	
+						}
+						else
+						{
+							preparedStatement.setTimestamp(13,null);	
+						}
+						
+			            
+			            preparedStatement.setDouble(14 ,stockObj.getCurrent_volume());
+            
+            preparedStatement.executeUpdate();
+            con.close();
+            
+            responce="success";
+		}
+		catch (Exception e) {
+//			e.printStackTrace();
+			responce = e.getMessage();
+			e.printStackTrace();
+		} 
+		
+		return responce;
 	}
 	
 

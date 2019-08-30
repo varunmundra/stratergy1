@@ -449,11 +449,20 @@ public class Examples {
     
     public static void StopTicker()
     {
-    	if(tickerProvider!=null)
-    	tickerProvider.disconnect();
+    	{
+    	   tickerProvider.disconnect();
+    	   tickerProvider = null;
+    	   System.out.println("Ticker Stopped.....");
+    	}
     	
-    	System.out.println("Ticker Stopped.....");
     }
+    
+    double tmp_open = 0;
+	double tmp_high = 0;
+	double tmp_low = 5000;
+	double tmp_close = 0;
+	double tmp_vol = 0;
+	long diff = 0 ;
     
     /** Demonstrates com.zerodhatech.ticker connection, subcribing for instruments, unsubscribing for instruments, set mode of tick data, com.zerodhatech.ticker disconnection*/
     public void tickerUsage(KiteConnect kiteConnect, final ArrayList<Long> tokens) throws IOException, WebSocketException, KiteException {
@@ -513,6 +522,8 @@ public class Examples {
             public void onTicks(ArrayList<Tick> ticks) {
             	System.out.println("------------------------------------------------------------------------");
                 NumberFormat formatter = new DecimalFormat();
+//                ArrayList<Ticker> db_save_list = new ArrayList<Ticker>();
+                  ArrayList<MinuteData> db_save_list = new ArrayList<MinuteData>();
                 System.out.println("ticks size "+ticks.size());
                 if(ticks.size() > 0) {
                 	for(int i=0;i<ticks.size();i++) {
@@ -527,19 +538,126 @@ public class Examples {
             			ob.setCurrent_volume(ticks.get(i).getVolumeTradedToday());
             			
             			
+            			
+            			
+            			ArrayList<Ticker> nn = ob.getMinute_data();
+            			if(nn.size()==0)
+            			{
+            				nn.add(new Ticker(ticks.get(i).getInstrumentToken(), ticks.get(i).getLastTradedPrice(), ticks.get(i).getOpenPrice(), ticks.get(i).getHighPrice(), ticks.get(i).getLowPrice(), ticks.get(i).getClosePrice(), ticks.get(i).getTickTimestamp(), ticks.get(i).getVolumeTradedToday()));
+            			}
+            			else
+            			{
+            				
+            				Calendar cal = Calendar.getInstance();
+                			cal.setTime(nn.get((nn.size()-1)).getTime_stamp());
+                			
+                			Calendar cal_2 = Calendar.getInstance();
+                			cal_2.setTime(ticks.get(i).getTickTimestamp());
+                			
+//                			System.out.println("Time 1"+cal.getTime());
+//                			System.out.println("Time 2"+cal_2.getTime());
+                			
+//                			System.out.println((cal.get(Calendar.HOUR) != cal_2.get(Calendar.HOUR)));
+                			
+//                			System.out.println((cal.get(Calendar.MINUTE) != cal_2.get(Calendar.MINUTE)));
+                			
+//                			if((cal.get(Calendar.HOUR) != cal_2.get(Calendar.HOUR) ) || (cal.get(Calendar.MINUTE) != cal_2.get(Calendar.MINUTE)))
+                			if( cal.get(Calendar.MINUTE) != cal_2.get(Calendar.MINUTE) && (cal_2.get(Calendar.SECOND)>0))
+                			  {
+                				diff = 0;
+                				diff = Math.abs(cal.getTimeInMillis() - cal_2.getTimeInMillis()) * 1000 * 60;
+//                				System.out.println("Time Difference-->"+diff);
+                				
+		                				if(diff <= 1)
+		                				{
+//			                					System.out.println("New MINUTE----->"+instrument_token_tmp+" ->");
+			                   				 tmp_open = nn.get((0)).getLTP();
+			                   				 tmp_high = 0;
+			                   				 tmp_low = 500000000;
+			                   				 tmp_close = 0;
+			                   				 tmp_vol = 0;
+			                   				
+			                   				for(Ticker kk : nn)
+			                   				{   
+			                   					 
+//			                   					if(tmp_open==0) {tmp_open = kk.getLTP();}
+			                   					if (tmp_high<kk.getLTP()) {tmp_high = kk.getLTP();}
+			                   					if (tmp_low>kk.getLTP()) {tmp_low = kk.getLTP();}
+			//                   					tmp_vol = tmp_vol + kk.getCurrent_volume();
+			                   				}
+			                   				tmp_close = nn.get((nn.size() - 1)).getLTP();
+			                   				
+			                   				tmp_vol = (nn.get((nn.size() - 1)).getCurrent_volume() - ob.getTemp_previous_volume());
+			                   				
+			                   				ob.setTemp_previous_volume(nn.get((nn.size() - 1)).getCurrent_volume());
+			                   				
+			                   			    cal_2.set(Calendar.SECOND,0); 
+			                   				db_save_list.add(new MinuteData(instrument_token_tmp, cal_2.getTime(), tmp_open, tmp_high, tmp_low, tmp_close, tmp_vol));
+			                   				nn.clear();
+			                   				
+			                   				nn.add(new Ticker(ticks.get(i).getInstrumentToken(), ticks.get(i).getLastTradedPrice(), ticks.get(i).getOpenPrice(), ticks.get(i).getHighPrice(), ticks.get(i).getLowPrice(), ticks.get(i).getClosePrice(), ticks.get(i).getTickTimestamp(), ticks.get(i).getVolumeTradedToday()));
+		                   			     
+		                				}
+		                				else
+		                				{
+//		                					System.out.println("Time difference more than 1 minute");
+		                					
+		                					 tmp_open = nn.get((0)).getLTP();
+			                   				 tmp_high = 0;
+			                   				 tmp_low = 500000000;
+			                   				 tmp_close = 0;
+			                   				 tmp_vol = 0;
+		                					
+		                					for(Ticker kk : nn)
+			                   				{   
+			                   					 
+//			                   					if(tmp_open==0) {tmp_open = kk.getLTP();}
+			                   					if (tmp_high<kk.getLTP()) {tmp_high = kk.getLTP();}
+			                   					if (tmp_low>kk.getLTP()) {tmp_low = kk.getLTP();}
+			//                   					tmp_vol = tmp_vol + kk.getCurrent_volume();
+			                   				}
+			                   				tmp_close = nn.get((nn.size() - 1)).getLTP();
+			                   				
+			                   				tmp_vol = (nn.get((nn.size() - 1)).getCurrent_volume() - ob.getTemp_previous_volume());
+			                   				
+			                   				ob.setTemp_previous_volume(nn.get((nn.size() - 1)).getCurrent_volume());
+			                   				
+			                   			    cal.set(Calendar.SECOND,0); 
+			                   				db_save_list.add(new MinuteData(instrument_token_tmp, cal.getTime(), tmp_open, tmp_high, tmp_low, tmp_close, tmp_vol));
+			                   				nn.clear();
+			                   				
+			                   				nn.add(new Ticker(ticks.get(i).getInstrumentToken(), ticks.get(i).getLastTradedPrice(), ticks.get(i).getOpenPrice(), ticks.get(i).getHighPrice(), ticks.get(i).getLowPrice(), ticks.get(i).getClosePrice(), ticks.get(i).getTickTimestamp(), ticks.get(i).getVolumeTradedToday()));
+		                				}
+                				
+                			  }
+                			else
+                			  {
+//                				System.out.println("OLD MINUTE ---->"+instrument_token_tmp);
+                				nn.add(new Ticker(ticks.get(i).getInstrumentToken(), ticks.get(i).getLastTradedPrice(), ticks.get(i).getOpenPrice(), ticks.get(i).getHighPrice(), ticks.get(i).getLowPrice(), ticks.get(i).getClosePrice(), ticks.get(i).getTickTimestamp(), ticks.get(i).getVolumeTradedToday()));  
+                			  }
+            				
+            			}
+            			
+            			
 //            			 if(Stock.Print_TimeStamp.after(new Date()))
 //            			  {
 //            				 System.out.println("----Will print for 2 minutes-------");
 //            				 System.out.println(Stock.name_list.get(ob.getInstrument_token())+" ,******* High_now->  "+ob.getHigh_counter()+"   ******** , Low->"+ob.getLow_counter()+" , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday()+" Diff of last 10 highs->"+ob.getHigh_queue().getDifference()+" Sec");
 //            				 
 //            			  }
+//            			  System.out.println("<------------->");
+//            			  System.out.println("Token No->"+ob.getInstrument_token()+"  "+Stock.name_list.get(ob.getInstrument_token())+" ,******* High_now->  "+ticks.get(i).getHighPrice()+"   ******** , Low->"+ticks.get(i).getLowPrice()+" , LTP->"+ticks.get(i).getLastTradedPrice()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
+//            			  System.out.println("<------------->");
+            			
+//            			System.out.println(Double.compare(ticks.get(i).getHighPrice(),ob.getHigh()) > 0 ) ;
             			
             			
-                		
-                		if ( Double.compare(ticks.get(i).getLastTradedPrice(),ob.getHigh()) > 0 )
+            			if ( Double.compare(ticks.get(i).getHighPrice(),ob.getHigh()) > 0 ) 
+//                		if ( Double.compare(ticks.get(i).getLastTradedPrice(),ob.getHigh()) > 0 )
 //                		if( ticks.get(i).getLastTradedPrice() > ob.getHigh())
                 		{
-                			ob.setHigh(ticks.get(i).getLastTradedPrice());
+//                			ob.setHigh(ticks.get(i).getLastTradedPrice());
+                			ob.setHigh(ticks.get(i).getHighPrice());
                 			ob.setHigh_counter(ob.getHigh_counter()+1);
                 			ob.setFlag('H'); // H means high 	
                 			
@@ -554,30 +672,31 @@ public class Examples {
                 			
                 			if( (ob.getHigh_counter() >=25)  )
                 			{
-//                				if(ob.getHigh_counter() ==33)
-//                				{
-//                					System.out.println("##################");
-//                				}	
                 				System.out.println("Dynamic Val->"+getDynamicValue()); 
-                			 System.out.println("Token No->"+ob.getInstrument_token()+"  "+Stock.name_list.get(ob.getInstrument_token())+" ,******* High_now->  "+ob.getHigh_counter()+"   ******** , Low->"+ob.getLow_counter()+" , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
-//                			 if(ob.getHigh_counter() ==33)
-//             				{
-//             					System.out.println("##################");
-//             				}
+                			    System.out.println("Token No->"+ob.getInstrument_token()+"  "+Stock.name_list.get(ob.getInstrument_token())+" ,******* High_now->  "+ob.getHigh_counter()+"   ******** , Low->"+ob.getLow_counter()+" , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
                 			}
 //                			if((ob.getHigh_counter() >=25) && (ob.getCurrent_volume() * ob.getLTP() > getDynamicValue()) )
-                			if( (ob.getHigh_counter() >=25) && (Double.compare((ob.getCurrent_volume() * ob.getLTP()), getDynamicValue()) > 0 ) )	
-//                			    if( (ob.getHigh_counter() >=3)  )
+                			if( (ob.getHigh_counter() >=25) && (Double.compare((ob.getCurrent_volume() * ob.getHigh()), getDynamicValue()) > 0 ) )
+//                			if( (ob.getHigh_counter() >=25) && (Double.compare((ob.getCurrent_volume() * ob.getLTP()), getDynamicValue()) > 0 ) )	
+//                			    if( (ob.getHigh_counter() >=2)  )
                 			        {
                 				        TickerEndpoint.sendData(ob.getNewDummyObj());	
                 					}
                 			
+                			
+//                			System.out.println("going to set HIGH COUNTER------------>"+ob.getTime_stamp()+" Current High Price-->"+ticks.get(i).getHighPrice()+"     "+ob.getInstrument_token()+" High->"+ob.getHigh());
+                			
                 		}
                 		
-                		if ( Double.compare(ticks.get(i).getLastTradedPrice(),ob.getLow()) < 0 )
+            			
+//            			System.out.println(Double.compare(ticks.get(i).getHighPrice(),ob.getHigh()) > 0 ) ;
+            			
+                		if ( Double.compare(ticks.get(i).getLowPrice(),ob.getLow()) < 0 )
+//                		if ( Double.compare(ticks.get(i).getLastTradedPrice(),ob.getLow()) < 0 )
 //                		if( ticks.get(i).getLastTradedPrice() < ob.getLow())
                 		{
-                			ob.setLow(ticks.get(i).getLastTradedPrice());
+//                			ob.setLow(ticks.get(i).getLastTradedPrice());
+                			ob.setLow(ticks.get(i).getLowPrice());
                 			ob.setLow_counter(ob.getLow_counter()+1);
                 			ob.setFlag('L'); // L means low 
                 			
@@ -589,38 +708,34 @@ public class Examples {
 //                			{
 //                				ob.getLow_queue().add(ticks.get(i).getTickTimestamp());
 //                			}
-                			 
-                			if( (ob.getLow_counter() >=25) && (ob.getCurrent_volume() * ob.getLTP() > getDynamicValue()) )
-//                			if( (ob.getLow_counter() >=3) )
+                			
+//                			if( (ob.getLow_counter() >=25) && (ob.getCurrent_volume() * ob.getLow() > getDynamicValue()) )
+//                			if( (ob.getLow_counter() >=25) && (ob.getCurrent_volume() * ob.getLTP() > getDynamicValue()) )
+                			if( (ob.getLow_counter() >=25) )
                 			{
-//                				if(ob.getLow_counter() ==33)
-//                				{
-//                					System.out.println("##################");
-//                				}
                 				System.out.println("Dynamic Val->"+getDynamicValue());
                 				System.out.println("Token No->"+ob.getInstrument_token()+" "+Stock.name_list.get(ob.getInstrument_token())+" , High->"+ob.getHigh_counter()+" ,******** Low_now->  "+ob.getLow_counter()+"   ********* , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
-//                				if(ob.getLow_counter() ==33)
-//                				{
-//                					System.out.println("##################");
-//                				}
                 			}
                 			
-                			if( (ob.getLow_counter() >=25) && (Double.compare((ob.getCurrent_volume() * ob.getLTP()), getDynamicValue()) > 0 ) )
-//                			if( (ob.getLow_counter() >=3	) )
+                			if( (ob.getLow_counter() >=25) && (Double.compare((ob.getCurrent_volume() * ob.getLow()), getDynamicValue()) > 0 ) )
+//                			if( (ob.getLow_counter() >=2))
                 					{
                 				        TickerEndpoint.sendData(ob.getNewDummyObj());	
                 					}
                 			
-                			 
+//                			System.out.println("going to set LOW COUNTER------------>"+ob.getTime_stamp()+"  Current Low Price-->"+ticks.get(i).getLowPrice()+"     "+ob.getInstrument_token()+" Low->"+ob.getLow()); 
                 		}                		                		
                 		
-                		if(Stock.Print_counter < 500)
-                		{
-                			System.out.println("-==-=-=-=-=-IN COUNTER CHECK=-=-=-=-=-=-=-=");
-                			System.out.println("Token No->"+ob.getInstrument_token()+" "+Stock.name_list.get(ob.getInstrument_token())+" , High->"+ob.getHigh_counter()+" ,******** Low_now->  "+ob.getLow_counter()+"   ********* , LTP->"+ob.getLTP()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
-                			Stock.Print_counter++;
-                		}
+	                		if(Stock.Print_counter < 500)
+	                		{
+	                			System.out.println("-==-=-=-=-=-Tick Check=-=-=-=-=-=-=-=");
+	                			   System.out.println("Token No->"+ob.getInstrument_token()+" "+Stock.name_list.get(ob.getInstrument_token())+" , High->"+ticks.get(i).getHighPrice()+" ,******** Low_now->  "+ticks.get(i).getLowPrice()+"   ********* , LTP->"+ticks.get(i).getLastTradedPrice()+" , Time->"+ticks.get(i).getTickTimestamp()+",  Volume Today--->   "+ticks.get(i).getVolumeTradedToday());
+	                			System.out.println("-==-=-=-=-=-Tick Check=-=-=-=-=-=-=-=");
+	//                			
+	                			Stock.Print_counter++;
+	                		}
                 		
+//	                	db_save_list.add(new Ticker(ticks.get(i).getInstrumentToken(), ticks.get(i).getLastTradedPrice(), ticks.get(i).getOpenPrice(), ticks.get(i).getHighPrice(), ticks.get(i).getLowPrice(), ticks.get(i).getClosePrice(), ticks.get(i).getTickTimestamp(), ticks.get(i).getVolumeTradedToday()));
                 		Stock.stock_list.put(instrument_token_tmp,ob);
 //                		save_State(ob);
                 		 
@@ -646,6 +761,10 @@ public class Examples {
 //                    System.out.println("last traded time "+ticks.get(i).getLastTradedTime());
 //                    System.out.println(ticks.get(i).getMarketDepth().get("buy").size());
                 	}
+                	
+//                	save_Ticker_Data(db_save_list);
+                	if(db_save_list.size()>0)
+                    	save_Minute_Data(db_save_list);
                 }
             }
         });
@@ -709,11 +828,15 @@ public class Examples {
 	            @Override
 	            public void onError(Exception exception) {
 	                //handle here.
+	            	exception.getStackTrace();
+	            	System.out.println("Ticker NORMAL Error Occured--->"+exception.getMessage());
 	            }
 
 	            @Override
 	            public void onError(KiteException kiteException) {
 	                //handle here.
+	            	kiteException.getStackTrace();
+	            	System.out.println("Ticker KITE Error Occured--->"+kiteException.getMessage());
 	            }
 
 	            @Override
@@ -929,14 +1052,14 @@ public class Examples {
     }
 	
 	
-	public void getHistoricalDataday(KiteConnect kiteConnect) throws KiteException, IOException, SQLException, ParseException {
+	public String getHistoricalDataday(KiteConnect kiteConnect) {
 
         /** Get historical data dump, requires from and to date, intrument token, interval, continuous (for expired F&O contracts)
 
          * returns historical data object which will have list of historical data inside the object.   checking for 408065*/
-
+		String responce=null;
     	
-		
+		try {
             
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1072,15 +1195,31 @@ public class Examples {
        
        System.out.println("finishes 1 day"); 
        con.close();
+       
+       responce = "success";
+       
+		}
+		catch (Exception e) {
+//             e.printStackTrace();
+             responce = e.getMessage();
+		} catch (KiteException e1) {
+			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+			responce = e1.getMessage();
+		}
+		
+		
+		return responce;
 
     }
 
     
 
-    public void saveHLC()  {
+    public String saveHLC()  {
 
         /** Save avg volume and h l c  */
-
+    	String responce=null;
+     	
     	try {
 
 			Connection con = C3poDataSource.getConnection();
@@ -1144,12 +1283,6 @@ public class Examples {
 
 					    	stmt4.executeUpdate();
 
-				    		
-
-				    		
-
-				    		
-
 				    	}
 
 				    	
@@ -1164,36 +1297,30 @@ public class Examples {
 
 			 con.close();
 
-			
+			 responce="success";
 
 		} catch (SQLException e) {
 
 			// TODO Auto-generated catch block
-
+			responce= e.getMessage();
 			e.printStackTrace();
 
 		}
 
-    	
 
-    	
-
-        
-
-        System.out.println("finish hlc");
+    	  System.out.println("finish hlc");  
+    	return responce;
+      
 
     }
 
     
 
-    public void saveAvgVolume()  {
-
-    	
-    	
-    	
-    	
+    public String saveAvgVolume()  {
         /** Save avg volume and h l c  */
-
+    			
+    	String responce=null;
+    	
     	try {
 
 			Connection con = C3poDataSource.getConnection();
@@ -1226,29 +1353,20 @@ public class Examples {
 			    	stmt4.setLong(2,rs2.getLong("instrument_token"));
 
 			    	stmt4.executeUpdate();
-
-			    	
-
 			    }
 			    }
+			 responce="success";
 			 con.close();
-
+			 
 		} catch (SQLException e) {
 
 			// TODO Auto-generated catch block
-
-			e.printStackTrace();
+			responce=e.getMessage();
+//			e.printStackTrace();
 
 		}
-
-    	
-
-    	
-
-        
-
-        System.out.println("finish avg");
-
+    	System.out.println("finish avg");
+        return responce;
     }
 	
     
@@ -1347,4 +1465,157 @@ public class Examples {
         
         pool.execute(task);
     }
+    
+    
+    
+    
+    
+    
+    
+    public static void save_Ticker_Data(List<Ticker> ob_lst)
+    {
+    	 
+        ExecutorService pool = Executors.newCachedThreadPool();
+        
+				        Runnable task = new Runnable() {
+				            public void run() {
+				            	Connection con = null;
+				            	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				            	final int batchSize = 200;
+				            	int count = 0;
+				            	
+				            	try
+				            	{
+				            	con = C3poDataSource.getConnection();
+				            	
+				                String sql="insert into ticker_data (LTP,high,low,open,close,time_stamp,current_volume,instrument_token) values (?,?,?,?,?,?,?,?)";
+				                
+				//("+ob.getInstrument_token()+","+ob.getLTP()+","+ob.getHigh()+","+ob.getLow()+","+ob.getHigh_counter()+","+ob.getLow_counter()+","+ob.prev_high+","+ob.getPrev_low()+","+ob.getPrev_close()+","+ob.getAvg_volume()+",'"+ob.getTime_stamp()+"',"+ob.getCurrent_volume()+")";
+				
+				                PreparedStatement preparedStatement = con.prepareStatement(sql);
+				                
+				                for (Ticker ob: ob_lst) {
+							                preparedStatement.setDouble(1,ob.getLTP());
+							                preparedStatement.setDouble(2, ob.getHigh());
+							                preparedStatement.setDouble(3, ob.getLow());
+							                preparedStatement.setDouble(4, ob.getOpen());
+							                preparedStatement.setDouble(5, ob.getClose());
+							            
+							                if(ob.getTime_stamp()!=null)
+							                {
+							                  preparedStatement.setString(6, formatter.format(ob.getTime_stamp()));
+							                }
+							                else
+							                {
+							                	preparedStatement.setString(6, null);	
+							                }
+							                preparedStatement.setDouble(7, ob.getCurrent_volume());
+							                preparedStatement.setLong(8, ob.getInstrument_token());
+							                preparedStatement.addBatch();
+							                
+							                if(++count % batchSize == 0) {
+							                	preparedStatement.executeBatch();
+							            	}
+				                }
+				                
+				                preparedStatement.executeBatch(); // insert remaining records
+				                preparedStatement.close();
+				                con.close();
+//				                System.out.println("=====DATA SAVED IN DB-=-=-=-=-");
+				            	}
+				            	catch (Exception e) {
+				            		System.out.println("Error Occured while saving State in DB");
+									e.printStackTrace();
+								}
+				            	finally
+				            	{
+				            		try
+				            		{
+				            			if(con!=null)
+				            			con.close();
+				            		}
+				            		catch (Exception e) {
+										e.printStackTrace();
+									}
+				            	}
+				            }
+				        };
+        
+        
+        pool.execute(task);
+    }
+    
+    public static void save_Minute_Data(List<MinuteData> ob_lst)
+    {
+//    	 System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=IN MINUTE DATA SAVING=-=-=-=-=-=-=-=-=-=-=-=-=--===-=-");
+        ExecutorService pool = Executors.newCachedThreadPool();
+        
+				        Runnable task = new Runnable() {
+				            public void run() {
+				            	Connection con = null;
+				            	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				            	final int batchSize = 200;
+				            	int count = 0;
+				            	
+				            	try
+				            	{
+				            	con = C3poDataSource.getConnection();
+				            	
+				                String sql="insert into minute_data (high,low,open,close,time,volume,instrument_token) values (?,?,?,?,?,?,?)";
+				                
+				//("+ob.getInstrument_token()+","+ob.getLTP()+","+ob.getHigh()+","+ob.getLow()+","+ob.getHigh_counter()+","+ob.getLow_counter()+","+ob.prev_high+","+ob.getPrev_low()+","+ob.getPrev_close()+","+ob.getAvg_volume()+",'"+ob.getTime_stamp()+"',"+ob.getCurrent_volume()+")";
+				
+				                PreparedStatement preparedStatement = con.prepareStatement(sql);
+				                
+				                for (MinuteData ob: ob_lst) {
+//							                preparedStatement.setDouble(1,ob.getLTP());
+							                preparedStatement.setDouble(1, ob.getHigh());
+							                preparedStatement.setDouble(2, ob.getLow());
+							                preparedStatement.setDouble(3, ob.getOpen());
+							                preparedStatement.setDouble(4, ob.getClose());
+							            
+							                if(ob.getTime()!=null)
+							                {
+							                  preparedStatement.setString(5, formatter.format(ob.getTime()));
+							                }
+							                else
+							                {
+							                	preparedStatement.setString(5, null);	
+							                }
+							                preparedStatement.setDouble(6, ob.getVolume());
+							                preparedStatement.setLong(7, ob.getInstrument_token());
+							                preparedStatement.addBatch();
+							                
+							                if(++count % batchSize == 0) {
+							                	preparedStatement.executeBatch();
+							            	}
+				                }
+				                
+				                preparedStatement.executeBatch(); // insert remaining records
+				                preparedStatement.close();
+				                con.close();
+//				                System.out.println("=====DATA SAVED IN DB-=-=-=-=-");
+				            	}
+				            	catch (Exception e) {
+				            		System.out.println("Error Occured while saving State in DB");
+									e.printStackTrace();
+								}
+				            	finally
+				            	{
+				            		try
+				            		{
+				            			if(con!=null)
+				            			con.close();
+				            		}
+				            		catch (Exception e) {
+										e.printStackTrace();
+									}
+				            	}
+				            }
+				        };
+        
+        
+        pool.execute(task);
+    }
+    
 }
